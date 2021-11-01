@@ -9,66 +9,42 @@
         <ion-item lines="none">
           <ion-label slot="start">
             <h2>Customer Name</h2>
-
             <h3>Order ID</h3>
           </ion-label>
           <ion-label slot="end" color="medium" position="fixed">
             order date
           </ion-label>
-
-          <!-- <p>order date</p>  -->
         </ion-item>
 
         <ion-item lines="full">
-          <ion-label>
-            <ion-thumbnail>
-              <!-- <img src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y" alt=""> -->
-              <Image
-                src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y"
-              ></Image>
-            </ion-thumbnail>
+          <ion-thumbnail slot="start">
+            <Image src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y"></Image>
+          </ion-thumbnail>
+          <ion-label slot="start">
+            <p>BRAND</p>
+            <h2>Virtual Name</h2>
+            <p>{{ $t("Color") }}:color</p>
+            <p>{{ $t("Size") }}:size</p>
           </ion-label>
-          <ion-label>
-            <ion-label slot="start">
-              <ion-label position="stacked">BRAND</ion-label>
-              <list-item-title>
-                <h2>Virtual Name</h2>
-              </list-item-title>
-              <ion-label color="medium">{{ $t("Color") }}:color</ion-label>
-              <ion-label color="medium">{{ $t("Size") }}:size</ion-label>
-            </ion-label>
-          </ion-label>
-
           <ion-badge slot="end" color="primary">status</ion-badge>
         </ion-item>
 
         <ion-item>
           <ion-label slot="start">
-            <!-- <list-item-title> -->
             {{ $t("Store pickup") }}
-            <!-- </list-item-title> -->
           </ion-label>
-
-          <ion-button
-            @click="openPopover"
-            slot="end"
-            color="medium"
-            fill="outline"
-          >
-            change
-          </ion-button>
+          <ion-button @click="openPopover" slot="end" color="medium" fill="outline">Change</ion-button>
         </ion-item>
-
         <ion-item lines="full">
           <ion-label slot="start">
             {{ $t("Ship to") }}
           </ion-label>
-
-          <ion-button slot="end" color="medium" fill="outline">EDIT</ion-button>
+          <ion-button slot="end" color="medium" fill="outline">Edit</ion-button>
         </ion-item>
+
         <ion-item lines="none">
           <ion-label color="danger">
-            {{ $t("CANCEL ITEM") }}
+            {{ $t("Cancel Item") }}
           </ion-label>
         </ion-item>
       </ion-card>
@@ -77,16 +53,34 @@
 </template>
 
 <script lang="ts">
-import { IonContent, IonPage, popoverController } from "@ionic/vue";
+import {
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonPage,
+  IonText,
+  IonThumbnail,
+  popoverController,  
+} from "@ionic/vue";
 import { defineComponent } from "vue";
 import Popover from "./PickupPopover.vue";
 import Image from "@/components/Image.vue";
 
 export default defineComponent({
   components: {
-    IonContent,
-    IonPage,
-    Image,
+   Image,
+   IonBadge,
+   IonButton,
+   IonCard,
+   IonContent,
+   IonItem,
+   IonLabel,
+   IonPage,
+   IonText,
+   IonThumbnail,
   },
   methods: {
     async openPopover(ev: Event) {

@@ -1,11 +1,19 @@
 {
   "Blank": "Blank",
   "Click the backdrop to dismiss.": "Click the backdrop to dismiss.",
-  "Logout":"Logout",
+  "Logout": "Logout",
   "Ready to create an app?": "Ready to create an app?",
-  "Settings":"Settings",
+  "Settings": "Settings",
   "Start with Ionic": "Start with Ionic",
-  "Store":"Store",
-  "store name":"store name",
-  "UI Components": "UI Components"
+  "Store": "Store",
+  "store name": "store name",
+  "UI Components": "UI Components",
+  "Your Order": "Your Order",
+  "Color": "Color",
+  "Size": "Size",
+  "Store pickup": "Store pickup",
+  "Ship to": "Ship to",
+  "Cancel Item": "Cancel Item",
+  "Change Store": "Change Store",
+  "Get it shipped": "Get it shipped"
 }
