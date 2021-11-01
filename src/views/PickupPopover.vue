@@ -3,11 +3,11 @@
     <ion-list>
         <ion-item>
             <ion-icon slot="start" :icon="storefrontOutline"></ion-icon>
-            <ion-label>Change Store</ion-label>
+            <ion-label> {{ $t("Change Store") }}</ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="none">
             <ion-icon slot="start" :icon="mailOutline"></ion-icon>
-            <ion-label>Get it shipped</ion-label>
+            <ion-label>{{ $t("Get it shipped") }}</ion-label>
         </ion-item>
     </ion-list>
   </ion-content>
