@@ -15,5 +15,14 @@
   "Ship to": "Ship to",
   "Cancel Item": "Cancel Item",
   "Change Store": "Change Store",
-  "Get it shipped": "Get it shipped"
+  "Get it shipped": "Get it shipped",
+  "Shipment Details": "Shipment Details",
+  "Street name": "Street name",
+  "House/Apartment number":"House/Apartment number",
+  "City": "City",
+  "State / Province": "State / Province",
+  "Zip code": "Zip code",
+  "Country": "Country",
+  "Save": "Save"
+
 }

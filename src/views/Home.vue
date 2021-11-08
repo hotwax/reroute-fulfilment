@@ -6,6 +6,7 @@
       </ion-text>
 
       <ion-card>
+
         <ion-item lines="none">
           <ion-label slot="start">
             <h2>Customer Name</h2>
@@ -35,11 +36,12 @@
           </ion-label>
           <ion-button @click="openPopover" slot="end" color="medium" fill="outline">Change</ion-button>
         </ion-item>
+
         <ion-item lines="full">
           <ion-label slot="start">
             {{ $t("Ship to") }}
           </ion-label>
-          <ion-button slot="end" color="medium" fill="outline">Edit</ion-button>
+          <ion-button slot="end" color="medium" fill="outline" @click="openModal">Edit</ion-button>
         </ion-item>
 
         <ion-item lines="none">
@@ -47,6 +49,7 @@
             {{ $t("Cancel Item") }}
           </ion-label>
         </ion-item>
+        
       </ion-card>
     </ion-content>
   </ion-page>
@@ -63,12 +66,13 @@ import {
   IonPage,
   IonText,
   IonThumbnail,
-  popoverController,  
+  popoverController,
+  modalController  
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import Popover from "./PickupPopover.vue";
 import Image from "@/components/Image.vue";
-
+import ShipmentModal from "./ShipmentModal.vue";
 export default defineComponent({
   components: {
    Image,
@@ -86,7 +90,7 @@ export default defineComponent({
     async openPopover(ev: Event) {
       const popover = await popoverController.create({
         component: Popover,
-        cssClass: "my-custom-class",
+       
         event: ev,
         translucent: true,
       });
@@ -94,6 +98,14 @@ export default defineComponent({
 
       const { role } = await popover.onDidDismiss();
       console.log("onDidDismiss resolved with role", role);
+    },
+
+    async openModal() {
+      const modal = await modalController
+        .create({
+          component: ShipmentModal
+        })
+      return modal.present();
     },
   },
 });
