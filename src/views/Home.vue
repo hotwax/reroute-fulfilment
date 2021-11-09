@@ -52,13 +52,12 @@ import {
   IonPage,
   IonText,
   IonThumbnail,
-  popoverController,
-  modalController  
+  popoverController,  
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import Popover from "./PickupPopover.vue";
 import Image from "@/components/Image.vue";
-import ShipmentModal from "./ShipmentModal.vue";
+
 export default defineComponent({
   components: {
    Image,
@@ -77,11 +76,16 @@ export default defineComponent({
     async openPickupPopover(ev: Event) {
       const popover = await popoverController.create({
         component: Popover,
+<<<<<<< HEAD
+=======
+        cssClass: "my-custom-class",
+>>>>>>> parent of adcbd792... Implemented modal component to accept shipment details
         event: ev,
         translucent: true,
       });
       await popover.present();
     },
+<<<<<<< HEAD
 
     async openShipmentModal() {
       const modal = await modalController
@@ -90,6 +94,8 @@ export default defineComponent({
         })
       return modal.present();
     },
+=======
+>>>>>>> parent of adcbd792... Implemented modal component to accept shipment details
   },
 });
 </script>
