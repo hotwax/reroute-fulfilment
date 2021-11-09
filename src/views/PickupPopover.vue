@@ -1,17 +1,14 @@
 <template>
   <ion-content class="ion-padding">
     <ion-list>
-
-        <ion-item>
-            <ion-icon slot="start" :icon="storefrontOutline"></ion-icon>
-            <ion-label> {{ $t("Change Store") }}</ion-label>
-        </ion-item>
-
-        <ion-item lines="none">
-            <ion-icon slot="start" :icon="mailOutline"></ion-icon>
-            <ion-label>{{ $t("Get it shipped") }}</ion-label>
-        </ion-item>
-        
+      <ion-item>
+        <ion-icon slot="start" :icon="storefrontOutline" />
+        <ion-label> {{ $t("Change Store") }}</ion-label>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-icon slot="start" :icon="mailOutline" />
+        <ion-label>{{ $t("Get it shipped") }}</ion-label>
+      </ion-item>     
     </ion-list>
   </ion-content>
 </template>

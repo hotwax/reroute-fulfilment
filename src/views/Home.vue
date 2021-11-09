@@ -4,19 +4,14 @@
       <ion-text id="title">
         <h1>{{ $t("Your Order") }}</h1>
       </ion-text>
-
       <ion-card>
-
         <ion-item lines="none">
-          <ion-label slot="start">
+          <ion-label>
             <h2>Customer Name</h2>
-            <h3>Order ID</h3>
+            <p>Order ID</p>
           </ion-label>
-          <ion-label slot="end" color="medium" position="fixed">
-            order date
-          </ion-label>
+          <ion-note slot="end">order date</ion-note>        
         </ion-item>
-
         <ion-item lines="full">
           <ion-thumbnail slot="start">
             <Image src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y"></Image>
@@ -24,32 +19,22 @@
           <ion-label slot="start">
             <p>BRAND</p>
             <h2>Virtual Name</h2>
-            <p>{{ $t("Color") }}:color</p>
-            <p>{{ $t("Size") }}:size</p>
+            <p>{{ $t("Color") }}: color</p>
+            <p>{{ $t("Size") }}: size</p>
           </ion-label>
           <ion-badge slot="end" color="primary">status</ion-badge>
         </ion-item>
-
         <ion-item>
-          <ion-label slot="start">
-            {{ $t("Store pickup") }}
-          </ion-label>
-          <ion-button @click="openPopover" slot="end" color="medium" fill="outline">Change</ion-button>
+          <ion-label>{{ $t("Store pickup") }}</ion-label>
+          <ion-button @click="openPickupPopover"  color="medium" fill="outline">Change</ion-button>
         </ion-item>
-
         <ion-item lines="full">
-          <ion-label slot="start">
-            {{ $t("Ship to") }}
-          </ion-label>
-          <ion-button slot="end" color="medium" fill="outline" @click="openModal">Edit</ion-button>
+          <ion-label>{{ $t("Ship to") }}</ion-label>  
+          <ion-button  color="medium" fill="outline" @click="openShipmentModal">Edit</ion-button>
         </ion-item>
-
         <ion-item lines="none">
-          <ion-label color="danger">
-            {{ $t("Cancel Item") }}
-          </ion-label>
+          <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>  
         </ion-item>
-        
       </ion-card>
     </ion-content>
   </ion-page>
@@ -63,6 +48,7 @@ import {
   IonContent,
   IonItem,
   IonLabel,
+  IonNote,
   IonPage,
   IonText,
   IonThumbnail,
@@ -82,25 +68,22 @@ export default defineComponent({
    IonContent,
    IonItem,
    IonLabel,
+   IonNote,
    IonPage,
    IonText,
    IonThumbnail,
   },
   methods: {
-    async openPopover(ev: Event) {
+    async openPickupPopover(ev: Event) {
       const popover = await popoverController.create({
         component: Popover,
-       
         event: ev,
         translucent: true,
       });
       await popover.present();
-
-      const { role } = await popover.onDidDismiss();
-      console.log("onDidDismiss resolved with role", role);
     },
 
-    async openModal() {
+    async openShipmentModal() {
       const modal = await modalController
         .create({
           component: ShipmentModal
@@ -114,7 +97,6 @@ export default defineComponent({
 <style scoped>
 #container {
   text-align: center;
-
   position: absolute;
   left: 0;
   right: 0;
@@ -130,9 +112,7 @@ export default defineComponent({
 #container p {
   font-size: 16px;
   line-height: 22px;
-
   color: #8c8c8c;
-
   margin: 0;
 }
 
@@ -151,7 +131,6 @@ export default defineComponent({
   font-size: 26px;
   line-height: 120%;
   /* or 31px */
-
   text-align: center;
   color: rgba(0, 0, 0, 0.87);
 }
