@@ -56,9 +56,9 @@ import {
   modalController  
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import Popover from "./PickupPopover.vue";
+import ChangePickupPreferencePopover from "./ChangePickupPreferencePopover.vue";
 import Image from "@/components/Image.vue";
-import ShipmentModal from "./ShipmentModal.vue";
+import UpdateShipmentAddressModal from "./UpdateShipmentAddressModal.vue";
 
 export default defineComponent({
   components: {
@@ -77,7 +77,7 @@ export default defineComponent({
   methods: {
     async changePickupPreference(ev: Event) {
       const popover = await popoverController.create({
-        component: Popover,
+        component: ChangePickupPreferencePopover,
       });
       await popover.present();
     },
@@ -85,7 +85,7 @@ export default defineComponent({
     async updateShipmentAddress() {
       const modal = await modalController
         .create({
-          component: ShipmentModal
+          component: UpdateShipmentAddressModal
         })
       return modal.present();
     },
