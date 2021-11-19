@@ -41,7 +41,7 @@
         </ion-select>
       </ion-item>
     </ion-list>
-    <ion-button @click="closeShipmentModal()">{{ $t("Save") }}</ion-button>
+    <ion-button>{{ $t("Save") }}</ion-button>
  </ion-content>
 </template>
 

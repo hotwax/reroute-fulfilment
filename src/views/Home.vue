@@ -26,11 +26,11 @@
         </ion-item>
         <ion-item>
           <ion-label>{{ $t("Store pickup") }}</ion-label>
-          <ion-button @click="openPickupPopover"  color="medium" fill="outline">Change</ion-button>
+          <ion-button @click="changePickupPreference"  color="medium" fill="outline">Change</ion-button>
         </ion-item>
         <ion-item lines="full">
           <ion-label>{{ $t("Ship to") }}</ion-label>  
-          <ion-button  color="medium" fill="outline" @click="openShipmentModal">Edit</ion-button>
+          <ion-button  color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
         </ion-item>
         <ion-item lines="none">
           <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>  
@@ -75,17 +75,14 @@ export default defineComponent({
    IonThumbnail,
   },
   methods: {
-    async openPickupPopover(ev: Event) {
+    async changePickupPreference(ev: Event) {
       const popover = await popoverController.create({
         component: Popover,
-        cssClass: "my-custom-class",
-        event: ev,
-        translucent: true,
       });
       await popover.present();
     },
 
-    async openShipmentModal() {
+    async updateShipmentAddress() {
       const modal = await modalController
         .create({
           component: ShipmentModal
@@ -121,14 +118,7 @@ export default defineComponent({
 #container a {
   text-decoration: none;
 }
-#your-order {
-  position: absolute;
-  width: 123px;
-  height: 31px;
-  left: calc(50% - 123px / 2 + 0.5px);
-  top: 128px;
-  visibility: visible;
-}
+
 #title h1 {
   font-size: 26px;
   line-height: 120%;
