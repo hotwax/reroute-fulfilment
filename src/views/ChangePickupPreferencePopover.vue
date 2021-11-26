@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { IonContent, IonList, IonItem, IonIcon, IonLabel } from '@ionic/vue';
+import { IonContent, IonIcon, IonLabel, IonList, IonItem } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { 
  storefrontOutline,
@@ -23,7 +23,7 @@ import {
 
 export default defineComponent({
   name: 'Popover',
-  components: { IonContent, IonList, IonItem, IonIcon, IonLabel },
+  components: { IonContent, IonIcon, IonLabel, IonList, IonItem },
   setup() {
     return {
       storefrontOutline,

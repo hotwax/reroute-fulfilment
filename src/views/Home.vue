@@ -94,46 +94,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
-#container {
-  text-align: center;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
-}
-
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
-}
-
 #title h1 {
   font-size: 26px;
   line-height: 120%;
-  /* or 31px */
   text-align: center;
   color: rgba(0, 0, 0, 0.87);
-}
-ion-content {
-  visibility: visible;
-}
-#label {
-  width: 100px;
-  padding: 0;
-}
-.myCustomSelect {
-  max-width: 100% !important;
 }
 </style>
