@@ -1,9 +1,7 @@
 <template>
   <ion-page>
     <ion-content :fullscreen="true">
-      <ion-text id="title">
-        <h1>{{ $t("Your Order") }}</h1>
-      </ion-text>
+      <h1>{{ $t("Your Order") }}</h1>
       <ion-card>
         <ion-item lines="none">
           <ion-label>
@@ -22,7 +20,7 @@
             <p>{{ $t("Color") }}: color</p>
             <p>{{ $t("Size") }}: size</p>
           </ion-label>
-          <ion-badge slot="end" color="primary">status</ion-badge>
+          <ion-badge slot="end">status</ion-badge>
         </ion-item>
         <ion-item>
           <ion-label>{{ $t("Store pickup") }}</ion-label>
@@ -50,7 +48,6 @@ import {
   IonLabel,
   IonNote,
   IonPage,
-  IonText,
   IonThumbnail,
   popoverController,
   modalController  
@@ -71,7 +68,6 @@ export default defineComponent({
    IonLabel,
    IonNote,
    IonPage,
-   IonText,
    IonThumbnail,
   },
   methods: {
@@ -94,7 +90,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-#title h1 {
-  text-align: center;
-}
+  h1 {
+    text-align: center;
+  }
 </style>

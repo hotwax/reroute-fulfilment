@@ -1,5 +1,5 @@
 <template>
-  <ion-content class="ion-padding">
+  <ion-content>
     <ion-list>
       <ion-item>
         <ion-icon slot="start" :icon="storefrontOutline" />
@@ -17,8 +17,8 @@
 import { IonContent, IonIcon, IonLabel, IonList, IonItem } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { 
- storefrontOutline,
- mailOutline,
+  storefrontOutline,
+  mailOutline,
 } from 'ionicons/icons';
 
 export default defineComponent({
