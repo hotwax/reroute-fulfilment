@@ -60,9 +60,9 @@ export default defineComponent({
       modalController.dismiss({dismissed:true});
     }
   },
-   setup() {
+  setup() {
     return {
-     closeOutline
+      closeOutline
     }
   }
 });

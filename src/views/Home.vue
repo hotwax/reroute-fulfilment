@@ -14,7 +14,7 @@
         </ion-item>
         <ion-item lines="full">
           <ion-thumbnail slot="start">
-            <Image src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y"></Image>
+            <Image src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y" />
           </ion-thumbnail>
           <ion-label slot="start">
             <p>BRAND</p>
