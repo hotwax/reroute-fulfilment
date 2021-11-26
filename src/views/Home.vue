@@ -95,9 +95,6 @@ export default defineComponent({
 
 <style scoped>
 #title h1 {
-  font-size: 26px;
-  line-height: 120%;
   text-align: center;
-  color: rgba(0, 0, 0, 0.87);
 }
 </style>
