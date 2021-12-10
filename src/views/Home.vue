@@ -1,68 +1,96 @@
 <template>
   <ion-page>
-    <ion-header :translucent="true">
-      <ion-toolbar>
-        <ion-title>{{ $t("Blank") }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">{{ $t('Blank') }}</ion-title>
-        </ion-toolbar>
-      </ion-header>
-    
-      <div id="container">
-        <strong>{{ $t('Ready to create an app?') }}</strong>
-        <p>{{ $t('Start with Ionic') }} <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">{{ $t('UI Components') }}</a></p>
-      </div>
+      <h1>{{ $t("Your Order") }}</h1>
+      <ion-card>
+        <ion-item lines="none">
+          <ion-label>
+            <h2>Customer Name</h2>
+            <p>Order ID</p>
+          </ion-label>
+          <ion-note slot="end">order date</ion-note>        
+        </ion-item>
+        <ion-item lines="full">
+          <ion-thumbnail slot="start">
+            <Image src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y" />
+          </ion-thumbnail>
+          <ion-label slot="start">
+            <p>BRAND</p>
+            <h2>Virtual Name</h2>
+            <p>{{ $t("Color") }}: color</p>
+            <p>{{ $t("Size") }}: size</p>
+          </ion-label>
+          <ion-badge slot="end">status</ion-badge>
+        </ion-item>
+        <ion-item>
+          <ion-label>{{ $t("Store pickup") }}</ion-label>
+          <ion-button @click="changePickupPreference"  color="medium" fill="outline">Change</ion-button>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-label>{{ $t("Ship to") }}</ion-label>  
+          <ion-button  color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>  
+        </ion-item>
+      </ion-card>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import {
+  IonBadge,
+  IonButton,
+  IonCard,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonNote,
+  IonPage,
+  IonThumbnail,
+  popoverController,
+  modalController  
+} from "@ionic/vue";
+import { defineComponent } from "vue";
+import ChangePickupPreferencePopover from "./ChangePickupPreferencePopover.vue";
+import Image from "@/components/Image.vue";
+import UpdateShipmentAddressModal from "./UpdateShipmentAddressModal.vue";
 
 export default defineComponent({
-  name: 'Home',
   components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar
-  }
+   Image,
+   IonBadge,
+   IonButton,
+   IonCard,
+   IonContent,
+   IonItem,
+   IonLabel,
+   IonNote,
+   IonPage,
+   IonThumbnail,
+  },
+  methods: {
+    async changePickupPreference(ev: Event) {
+      const popover = await popoverController.create({
+        component: ChangePickupPreferencePopover,
+      });
+      await popover.present();
+    },
+
+    async updateShipmentAddress() {
+      const modal = await modalController
+        .create({
+          component: UpdateShipmentAddressModal
+        })
+      return modal.present();
+    },
+  },
 });
 </script>
 
 <style scoped>
-#container {
-  text-align: center;
-  
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
-}
-
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  
-  color: #8c8c8c;
-  
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
-}
+  h1 {
+    text-align: center;
+  }
 </style>
