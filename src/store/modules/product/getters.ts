@@ -11,6 +11,7 @@ const getters: GetterTree<ProductState, RootState> = {
       state.products.list.length > 0 &&
       state.products.list.length < state.products.total
     );
+    
   },
 };
 export default getters;

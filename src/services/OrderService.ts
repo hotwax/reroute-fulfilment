@@ -1,15 +1,15 @@
 import api from '@/api';
 
-const fetchProducts = async (query: any): Promise <any>  => {
+const getOrders = async (payload: any): Promise <any>  => {
   return api({
    // TODO: We can replace this with any API
     url: "orders", 
     method: "post",
-    data: query,
+    data: payload,
     cache: true
   });
 }
 
 export const OrderService = {
-  fetchProducts
+  getOrders
 }
