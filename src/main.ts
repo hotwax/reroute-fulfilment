@@ -4,7 +4,6 @@ import router from './router';
 import moment from 'moment'
 import "moment-timezone";
 
-
 import { IonicVue } from '@ionic/vue';
 
 /* Core CSS required for Ionic components to work properly */
@@ -57,9 +56,20 @@ app.config.globalProperties.$filters = {
       featureValue = featureSplit[2] ? featureSplit[2] : '';
     }
     return featureValue;
-  }
+  },
+  getFeatures(featureHierarchy: any, featureKey: string) {
+    let featuresValue = ''
+    if (featureHierarchy) {
+      featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
+        const featureSplit = feature ? feature.split('/') : [];
+        const featureValue = featureSplit[2] ? featureSplit[2] : '';
+        featuresValue +=  " " + featureValue;
+      })
+    }
+    // trim removes extra white space from beginning for the first feature
+    return featuresValue.trim();
+  },
 }
-
 
 router.isReady().then(() => {
   app.mount('#app');
