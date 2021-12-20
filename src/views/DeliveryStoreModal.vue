@@ -11,9 +11,11 @@
   </ion-header> 
   <ion-content>
     <ion-card>
-      <ion-card-header>Current delivery address</ion-card-header>
+      <ion-card-header>
+      <ion-card-title>Current delivery address</ion-card-title>
+      </ion-card-header>
       <ion-item lines="none">
-        <ion-icon :icon="mail-outline" />
+        <ion-icon slot="start" :icon="mailOutline" />
         <ion-label>
          <h2>John Doe</h2>
          <p>{{ $t("3 Time Square") }}</p>
@@ -23,6 +25,9 @@
       </ion-item>      
     </ion-card>  
     <ion-list>
+      <ion-list-header lines="full" color="light">
+        <ion-label>Nearby stores</ion-label>
+      </ion-list-header>
       <ion-item>
         <ion-label>{{ $t("Store name") }}</ion-label>
         <ion-checkbox slot="end" />
@@ -37,6 +42,9 @@
       </ion-item>
     </ion-list>  
     <ion-list>
+      <ion-list-header lines="full" color="light">
+          <ion-label>Nearby stores</ion-label>
+        </ion-list-header>
       <ion-item>
         <ion-label>{{ $t("Store name") }}</ion-label>
         <ion-checkbox slot="end" />
@@ -54,24 +62,24 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonNote, IonTitle,  IonToolbar,modalController } from '@ionic/vue';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle,  IonToolbar,modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { mailOutline } from 'ionicons/icons';
+import { mailOutline, closeOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 
 export default defineComponent({
   name: 'ChangeStoreModal',  
-  components: { IonButton, IonButtons, IonCheckbox,IonContent, IonHeader, IonIcon, IonItem, IonList, IonLabel, IonNote, IonTitle,  IonToolbar},
+  components: { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox,IonContent, IonHeader, IonIcon, IonItem, IonList, IonListHeader, IonLabel, IonNote, IonTitle,  IonToolbar},
   methods:{
-    closeChangeStoreModal(){
+    closeDeliveryStoreModal(){
       modalController.dismiss({dismissed:true});
     },
   },
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { mailOutline, router, store };
+    return { mailOutline, closeOutline, router, store };
   }
 });
 </script>
