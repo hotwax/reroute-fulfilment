@@ -9,6 +9,9 @@ const getters: GetterTree <UserState, RootState> = {
     isUserAuthenticated(state) {
         return state.token && state.current
     },
+    getShipmentAddress(state) {
+        return state.shipmentAddress;
+      },
     getUserToken (state) {
         return state.token
     },

@@ -13,32 +13,32 @@
     <ion-list>
       <ion-item>
         <ion-label position="floating">{{ $t("Street name") }}
-        <ion-input name="streetname" v-model="streetname" id="streetname"  type="text" required></ion-input></ion-label>
+        <ion-input name="streetname" v-model="shipmentAddress.streetname" id="streetname"  type="text" required></ion-input></ion-label>
         <ion-input />
       </ion-item> 
       <ion-item>
         <ion-label position="floating">{{ $t("House/Apartment number") }}
-        <ion-input name="apartmentnumber" v-model="apartmentnumber" id="apartmentnumber"  type="number" required></ion-input></ion-label>
+        <ion-input name="apartmentnumber" v-model="shipmentAddress.apartmentnumber" id="apartmentnumber"  type="number" required></ion-input></ion-label>
         <ion-input />
       </ion-item>     
       <ion-item>
         <ion-label position="floating">{{ $t("City") }}
-        <ion-input name="city" v-model="city" id="city"  type="text" required></ion-input></ion-label> 
+        <ion-input name="city" v-model="shipmentAddress.city" id="city"  type="text" required></ion-input></ion-label> 
         <ion-input />
       </ion-item>     
       <ion-item>
         <ion-label position="floating">{{ $t("State / Province") }}
-        <ion-input name="state" v-model="state" id="state"  type="text" required></ion-input></ion-label> 
+        <ion-input name="state" v-model="shipmentAddress.state" id="state"  type="text" required></ion-input></ion-label> 
         <ion-input />
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Zip code") }}
-        <ion-input name="zipcode" v-model="zipcode" id="zipcode"  type="number" required></ion-input></ion-label> 
+        <ion-input name="zipcode" v-model="shipmentAddress.zipcode" id="zipcode"  type="number" required></ion-input></ion-label> 
         <ion-input />
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Country") }}
-        <ion-input name="country" v-model="country" id="country" required></ion-input></ion-label>
+        <ion-input name="country" v-model="shipmentAddress.country" id="country" required></ion-input></ion-label>
         <ion-input />
         <ion-select>
           <ion-select-option>Afghanistan</ion-select-option>
@@ -48,7 +48,9 @@
         </ion-select>
       </ion-item>
     </ion-list>
-    <ion-button>{{ $t("Save") }}</ion-button>
+    <div class="details">
+    <ion-button @click="updateShipmentAddress()">{{ $t("Save") }}</ion-button>
+    </div>
  </ion-content>
 </template>
 
@@ -64,29 +66,23 @@ export default defineComponent({
   components: { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonInput, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle,  IonToolbar},
   data() {
     return {
+      shipmentAddress:{
       streetname: "",
       apartmentnumber: "",
       city: "",
       state: "",
       zipcode: "",
       country: ""
+      }     
     };
   },
   methods:{
-    shipmentmodal: function() {
-      const { streetname, apartmentnumber, city, state, zipcode, country } = this;
-      this.store.dispatch("shipmentmodal", { streetname, apartmentnumber, city, state, zipcode, country }).then((data: any) => {
-        if (data.token) {
-          this.streetname = ''
-          this.apartmentnumber = ''
-          this.city = ''
-          this.state = ''
-          this.zipcode = ''
-          this.country = ''
-          this.$router.push('/')
+    updateShipmentAddress() {
+        if (this.shipmentAddress) {
+          this.store.dispatch('user/shipmentAddress', this.shipmentAddress);
+          console.log("Address Updated");
         }
-      })
-    },
+      },
     closeShipmentModal(){
       modalController.dismiss({dismissed:true});
     },

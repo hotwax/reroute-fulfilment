@@ -5,35 +5,37 @@
         <h1>{{ orders.customerName }}</h1>
         <p>{{ orders.id }}</p>
       </ion-label>
-        <ion-note slot="end">order date</ion-note>        
+        <ion-note slot="end">{{ orders.orderDate }}</ion-note>        
     </ion-item>
     <div v-for="(shipGroup, index) of orders.shipGroup" :key="index">
     <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">   
       <ion-thumbnail slot="start">
         <Image :src="getProduct(item.productId).mainImageUrl" />
       </ion-thumbnail>
-      <div>   
       <ion-label slot="start">
         <p>{{item.brandName}}</p>
         <h2>{{ item.name }}</h2>
         <p>{{ $t("Color") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
         <p>{{ $t("Size") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
       </ion-label>
-      </div>
       <ion-badge slot="end">status</ion-badge>
     </ion-item>
-    </div>
     <ion-item>
-      <ion-label>{{ $t("Store pickup") }}</ion-label>
+      <ion-label>{{ shipGroup.shipmentMethodTypeId }} </ion-label>
       <ion-button @click="changePickupPreference"  color="medium" fill="outline">Change</ion-button>
     </ion-item>
-    <ion-item lines="full">
-      <ion-label>{{ $t("Ship to") }}</ion-label>  
-      <ion-button  color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
+    <ion-item>
+      <ion-list>
+      <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
+      <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+      <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
+      </ion-list>
+      <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
     </ion-item>
     <ion-item lines="none">
       <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>  
     </ion-item>
+    </div>
   </ion-card>
 </template>    
 
