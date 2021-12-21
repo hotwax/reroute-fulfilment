@@ -4,8 +4,7 @@ import * as types from './mutation-types'
 
 const mutations: MutationTree <OrdersState> = {
     [types.OPEN_ORDERS_INITIAL] ( state , payload ) {
-        state.orders.list = payload.orders
-        state.orders.totalCount = payload.ordersCount
+        state.current = payload.current;
     }
 }
 

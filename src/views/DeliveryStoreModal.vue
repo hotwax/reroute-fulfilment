@@ -21,7 +21,7 @@
          <p>{{ $t("3 Time Square") }}</p>
          <p>{{ $t("New York NY") }}</p>
         </ion-label>
-        <ion-note>{{ $t("shipping method") }}</ion-note>
+        <ion-note>{{ $t("<shipping method>") }}</ion-note>
       </ion-item>      
     </ion-card>  
     <ion-list>

@@ -2,12 +2,12 @@
   <ion-card>
     <ion-item lines="none">
       <ion-label>
-        <h1>{{ orders.customerName }}</h1>
-        <p>{{ orders.id }}</p>
+        <h1>{{ order.customerName }}</h1>
+        <p>{{ order.id }}</p>
       </ion-label>
-        <ion-note slot="end">{{ orders.orderDate }}</ion-note>        
+        <ion-note slot="end">{{ order.orderDate }}</ion-note>        
     </ion-item>
-    <div v-for="(shipGroup, index) of orders.shipGroup" :key="index">
+    <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
     <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">   
       <ion-thumbnail slot="start">
         <Image :src="getProduct(item.productId).mainImageUrl" />
@@ -18,7 +18,7 @@
         <p>{{ $t("Color") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
         <p>{{ $t("Size") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
       </ion-label>
-      <ion-badge slot="end">status</ion-badge>
+      <ion-badge slot="end">{{item.status}}</ion-badge>
     </ion-item>
     <ion-item>
       <ion-label>{{ shipGroup.shipmentMethodTypeId }} </ion-label>
@@ -32,13 +32,12 @@
       </ion-list>
       <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
     </ion-item>
+    </div>
     <ion-item lines="none">
       <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>  
     </ion-item>
-    </div>
   </ion-card>
 </template>    
-
 
 <script lang="ts">
 import {
@@ -73,11 +72,11 @@ export default({
    IonNote,
    IonThumbnail
   },
-  props: ["orders"],
+  props: ["order"],
   computed: {
     ...mapGetters({
       products: 'product/fetchProducts',
-      isScrollable: 'product/isScrollable',
+      getCurrent: 'order/getCurrent',
       getProduct: 'product/getProduct',
     })
   },

@@ -2,7 +2,7 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <h1>{{ $t("Your Order") }}</h1>
-      <OrderItemCard v-for="orders in orders" :key="orders.orderId" :orders="orders" />
+      <OrderItemCard :order="orders" />
     </ion-content>
   </ion-page>
 </template>
@@ -23,9 +23,7 @@ export default defineComponent({
   },     
   computed: {
     ...mapGetters({
-      orders: 'orders/getOrders',
-      products: 'product/getProducts',
-      isScrollable: 'product/isScrollable',
+      orders: 'orders/getCurrent',
     })
   },
   data (){
@@ -38,14 +36,6 @@ export default defineComponent({
     this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
   },
   methods: {
-    async loadMoreProducts (event: any) {
-      this.getOrders(
-        undefined,
-        Math.ceil(this.products.length / process.env.VUE_APP_VIEW_SIZE).toString()
-      ).then(() => {
-        event.target.complete();
-      })
-    },
     async getOrders(vSize: any, vIndex: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;

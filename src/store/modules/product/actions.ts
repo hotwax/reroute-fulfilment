@@ -10,7 +10,6 @@ import { hasError } from '@/utils'
 const actions: ActionTree<ProductState, RootState> = {
   // Find Product
   async fetchProducts ( { commit, state }, {productIds}) {
-    console.log(productIds)
     const cachedProductId = Object.keys(state.cached);
     const productIdFilter= productIds.reduce((filter: string, productId: any) => { 
       if (filter !== '') filter += ' OR '
