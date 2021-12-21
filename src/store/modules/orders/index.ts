@@ -5,7 +5,6 @@ import OrdersState from './OrdersState'
 import RootState from '../../RootState'
 import actions from './actions'
 
-
 const ordersModule: Module<OrdersState, RootState> = {
     namespaced: true,
     state: {
