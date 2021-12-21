@@ -30,7 +30,7 @@
       <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
       <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
       </ion-list>
-      <ion-button>{{ $("Edit") }}</ion-button>
+      <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
     </ion-item>
     </div>
     <ion-item lines="none">
