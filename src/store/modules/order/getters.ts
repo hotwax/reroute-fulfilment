@@ -4,10 +4,7 @@ import RootState from "../../RootState";
 
 const getters: GetterTree<OrderState , RootState> = {
   getOrder: (state) => {
-    return state.order.list;
-  },
-  getCurrent (state) {
-    return state.current;
+    return state.order;
   }
 }
 

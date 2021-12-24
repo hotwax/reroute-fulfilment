@@ -8,11 +8,7 @@ import actions from './actions'
 const orderModule: Module<OrderState, RootState> = {
   namespaced: true,
   state: {
-    current: {},
-    order: {
-      list: {},
-      totalCount: 0
-    }
+    order: {}
   },
   getters,
   mutations,
