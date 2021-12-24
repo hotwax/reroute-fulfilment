@@ -86,7 +86,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       products: 'product/fetchProducts',
-      order: 'orders/getCurrent',
+      order: 'order/getCurrent',
       getProduct: 'product/getProduct'
     })
   },
@@ -96,17 +96,17 @@ export default defineComponent({
     }
   },
   async mounted () {
-    this.getOrders(process.env.VUE_APP_VIEW_SIZE,0);
+    this.getOrder(process.env.VUE_APP_VIEW_SIZE,0);
   },
   methods: {
-    async getOrders(vSize: any, vIndex: any) {
+    async getOrder (vSize: any, vIndex: any) {
       const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
       const viewIndex = vIndex ? vIndex : 0;
       const payload = {
         viewSize,
         viewIndex,
       }
-      await this.store.dispatch("orders/getOrders", payload);
+      await this.store.dispatch("order/getOrder", payload);
     },
     async copyToClipboard(text: string) {
       await Clipboard.write({
@@ -115,13 +115,13 @@ export default defineComponent({
         showToast('Copied')
       })
     },
-    async changePickupPreference(ev: Event) {
+    async changePickupPreference (ev: Event) {
       const popover = await popoverController.create({
         component: PickupPreferencePopover,
       });
       await popover.present();
     },
-    async updateShipmentAddress() {
+    async updateShipmentAddress () {
       const modal = await modalController
         .create({
           component: ShipmentAddressModal
@@ -129,12 +129,12 @@ export default defineComponent({
       return modal.present();
     }
   },
-  setup() {
+  setup () {
     const store = useStore();
     return {
       store
     }
-  },
+  }
 });
 </script>
 

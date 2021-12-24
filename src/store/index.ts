@@ -6,28 +6,28 @@ import RootState from './RootState'
 import createPersistedState from "vuex-persistedstate";
 import userModule from './modules/user';
 import productModule from "./modules/product"
-import ordersModule from "./modules/orders"
+import orderModule from "./modules/order"
 
 const state: any = {
 }
 const persistState = createPersistedState({
-    paths: ['user'],
-    fetchBeforeUse: true
+  paths: ['user'],
+  fetchBeforeUse: true
 })
 const store = createStore<RootState>({
-    state,
-    actions,
-    mutations,
-    getters,
-    plugins: [ persistState ],
-    modules: { 
-        'user': userModule,
-        'product': productModule,
-        'orders': ordersModule,
-    },
+  state,
+  actions,
+  mutations,
+  getters,
+  plugins: [ persistState ],
+  modules: { 
+    'user': userModule,
+    'product': productModule,
+    'order': orderModule,
+  },
 })
 
 export default store
 export function useStore(): typeof store {
-    return useVuexStore()
+  return useVuexStore()
 }

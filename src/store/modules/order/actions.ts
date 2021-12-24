@@ -1,14 +1,14 @@
 import { OrderService } from "@/services/OrderService";
 import { ActionTree } from 'vuex'
 import RootState from '@/store/RootState'
-import OrdersState from './OrdersState'
+import OrderState from './OrderState'
 import * as types from './mutation-types'
 import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 
-const actions: ActionTree<OrdersState , RootState> ={
-  async getOrders ({ commit }, payload) {
+const actions: ActionTree<OrderState , RootState> ={
+  async getOrder ({ commit }, payload) {
     let resp;
     const obj = {
           "sortBy": payload.sortBy,
@@ -18,7 +18,7 @@ const actions: ActionTree<OrdersState , RootState> ={
           "facilityId": payload.facilityId
       };
     try {
-      resp = await OrderService.getOrders(obj);
+      resp = await OrderService.getOrder(obj);
       const order = resp.data;
       if (resp.status === 200 && resp.data && !hasError(resp)) {
         commit(types.OPEN_ORDERS_INITIAL, { current: resp.data })
