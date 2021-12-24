@@ -2,7 +2,7 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <h1>{{ $t("Your Order") }}</h1>
-      <OrderItemCard v-if="orders" :order="orders" />
+      <OrderItemCard :order="orders" />
     </ion-content>
   </ion-page>
 </template>

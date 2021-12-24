@@ -17,7 +17,10 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getCurrentFacility (state){
         return state.currentFacility
-    }
+    },
+    getShipmentAddress(state) {
+        return state.shipmentAddress;
+      },
 
 }
 export default getters;

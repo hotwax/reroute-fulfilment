@@ -8,22 +8,12 @@ import userModule from './modules/user';
 import productModule from "./modules/product"
 import ordersModule from "./modules/orders"
 
-
-// TODO check how to register it from the components only
-// Handle same module registering multiple time on page refresh
-//store.registerModule('user', userModule);
-
-
 const state: any = {
-
 }
-
 const persistState = createPersistedState({
     paths: ['user'],
     fetchBeforeUse: true
 })
-
-// Added modules here so that hydration takes place before routing
 const store = createStore<RootState>({
     state,
     actions,

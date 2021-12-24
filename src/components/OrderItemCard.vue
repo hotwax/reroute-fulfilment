@@ -22,7 +22,7 @@
     </ion-item>
     <ion-item>
       <ion-label>{{ shipGroup.shipmentMethodTypeId }} </ion-label>
-      <ion-button @click="changePickupPreference"  color="medium" fill="outline">Change</ion-button>
+      <ion-button @click="changePickupPreference"  color="medium" fill="outline">{{ $t("Change") }}</ion-button>
     </ion-item>
     <ion-item>
       <ion-list>
@@ -30,7 +30,7 @@
       <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
       <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
       </ion-list>
-      <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">Edit</ion-button>
+      <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">{{ $t("Edit") }}</ion-button>
     </ion-item>
     </div>
     <ion-item lines="none">
@@ -48,11 +48,15 @@ import {
   IonLabel,
   IonList,
   IonNote,
-  IonThumbnail
+  IonThumbnail,
+  popoverController,
+  modalController
 } from "@ionic/vue";
 import Image from "@/components/Image.vue";
 import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils';
+import PickupPreferencePopover from "@/views/PickupPreferencePopover.vue";
+import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { mapGetters } from 'vuex';
 
 const { Clipboard } = Plugins;
@@ -85,6 +89,19 @@ export default({
       }).then(() => {
         showToast('Copied')
       })
+    },
+    async changePickupPreference(ev: Event) {
+      const popover = await popoverController.create({
+        component: PickupPreferencePopover,
+      });
+      await popover.present();
+    },
+    async updateShipmentAddress() {
+      const modal = await modalController
+        .create({
+          component: ShipmentAddressModal
+        })
+      return modal.present();
     },
   },
 })
