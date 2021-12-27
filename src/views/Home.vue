@@ -32,7 +32,7 @@
           </ion-item>
           <ion-item v-else>
             <ion-label>{{ $t('Delivery') }}</ion-label>
-            <ion-button @click="changePickupPreference" color="medium" fill="outline">{{ $t("Pick up today") }}</ion-button>
+            <ion-button @click="changePickupPreference(shipGroup)" color="medium" fill="outline">{{ $t("Pick up today") }}</ion-button>
           </ion-item>
           <ion-item v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" lines="full">
             <ion-label slot="start">{{ shipGroup.shipmentMethodTypeId }}</ion-label>
@@ -40,11 +40,11 @@
           </ion-item>
           <ion-item>
             <ion-list>
-            <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
-            <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-            <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
+              <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
+              <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+              <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
             </ion-list>
-            <ion-button slot="end" color="medium" fill="outline" v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="changePickupPreference">{{ $t("Change store") }}</ion-button>
+            <ion-button slot="end" color="medium" fill="outline" v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="changePickupPreference(shipGroup)">{{ $t("Change store") }}</ion-button>
             <ion-button slot="end" color="medium" fill="outline" v-else @click="updateShipmentAddress">{{ $t("Edit address") }}</ion-button>
           </ion-item>
           <ion-item lines="none">
@@ -76,7 +76,6 @@ import {
 import { defineComponent } from "vue";
 import { Plugins } from '@capacitor/core';
 import { showToast } from '@/utils';
-import PickupPreferencePopover from "@/views/PickupPreferencePopover.vue";
 import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { mapGetters, useStore } from 'vuex'
 import Image from "@/components/Image.vue";
@@ -131,9 +130,12 @@ export default defineComponent({
         showToast('Copied')
       })
     },
-    async changePickupPreference (ev: Event) {
+    async changePickupPreference (shipGroup: any) {
       const modal = await modalController.create({
         component: StoreModal,
+        componentProps: {
+          shipGroup,
+        },
       });
       await modal.present();
     },

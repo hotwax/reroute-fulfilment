@@ -1,29 +1,43 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-buttons slot="end" @click="closeChangeStoreModal()" >
+      <ion-buttons slot="end" @click="closeModal()" >
         <ion-button >
           <ion-icon :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Choose a different store for pickup") }}</ion-title>  
+      <ion-title>{{ $t("Select pickup location") }}</ion-title>
     </ion-toolbar>   
   </ion-header> 
   <ion-content>
-    <ion-card>
+    <ion-card v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
       <ion-card-header>
         <ion-card-title>{{ $t("Current pick up store") }}</ion-card-title>
       </ion-card-header>
       <ion-item lines="none">
         <ion-icon slot="start" :icon="businessOutline" />
-        <ion-label>
-         <h2>Time Square</h2>
-         <p>{{ $t("3 Time Square") }}</p>
-         <p>{{ $t("New York NY") }}</p> 
-        </ion-label>
-        <ion-note>{{ $t("remaining stock") }}</ion-note>
-      </ion-item>     
-    </ion-card>  
+        <ion-list>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
+        </ion-list>
+        <ion-note slot="end">{{ $t("remaining stock") }}</ion-note>
+      </ion-item>
+    </ion-card>
+    <ion-card v-else>
+      <ion-card-header>
+        <ion-card-title>{{ $t("Current delivery address") }}</ion-card-title>
+      </ion-card-header>
+      <ion-item lines="none">
+        <ion-icon slot="start" :icon="mailOutline" />
+        <ion-list>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+          <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
+        </ion-list>
+        <ion-note slot="end">{{ shipGroup.shipmentMethodTypeId }}</ion-note>
+      </ion-item>
+    </ion-card>
     <ion-list>
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby stores") }}</ion-label>
@@ -43,7 +57,7 @@
     </ion-list>  
     <ion-list>
       <ion-list-header lines="full" color="light">
-        <ion-label>{{ $t("Nearby stores") }}</ion-label>
+        <ion-label>{{ $t("Other stores") }}</ion-label>
       </ion-list-header>
       <ion-item>
         <ion-label>{{ $t("Store name") }}</ion-label>
@@ -64,22 +78,23 @@
 <script lang="ts">
 import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle,  IonToolbar,modalController, popoverController } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { businessOutline, closeOutline } from 'ionicons/icons';
+import { businessOutline, closeOutline, mailOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 
 export default defineComponent({
-  name: 'ChangeStoreModal',  
+  name: 'StoreModal',
   components: { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox,IonContent, IonHeader, IonIcon, IonItem, IonList, IonListHeader, IonLabel, IonNote, IonTitle,  IonToolbar},
-  methods:{
-    closeChangeStoreModal(){
-      modalController.dismiss({dismissed:true});
+  methods: {
+    closeModal () {
+      modalController.dismiss({ dismissed: true });
     },
   },
+  props: ["shipGroup"],
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { businessOutline, closeOutline, router, store };
+    return { businessOutline, closeOutline, router, store, mailOutline};
   }
 });
 </script>
