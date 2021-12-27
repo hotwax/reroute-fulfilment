@@ -2,30 +2,41 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <h1>{{ $t("Your Order") }}</h1>
-      <ion-item lines="none">
+      <ion-item lines="none" class="border">
         <ion-label>
-          <h1>{{ order.customerName }}</h1>
+          {{ order.customerName }}
           <p>{{ order.id }}</p>
         </ion-label>
-          <ion-note slot="end">{{ order.orderDate }}</ion-note>
+        <ion-note slot="end">{{ order.orderDate }}</ion-note>
       </ion-item>
       <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
-        <ion-card>
-          <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">
+        <ion-card v-for="item of shipGroup.items" :key="item.id">
+          <ion-item lines="full">
             <ion-thumbnail slot="start">
               <Image :src="getProduct(item.productId).mainImageUrl" />
             </ion-thumbnail>
             <ion-label slot="start">
-              <p>{{item.brandName}}</p>
+              <p>{{ item.brandName }}</p>
               <h2>{{ item.name }}</h2>
-              <p>{{ $t("Color") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-              <p>{{ $t("Size") }} : {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+              <p>{{ $t("Color") }}: {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
+              <p>{{ $t("Size") }}: {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
             </ion-label>
-            <ion-badge slot="end">{{item.status}}</ion-badge>
+            <!-- TODO: handle all the status cases correctly -->
+            <ion-badge slot="end" v-if="item.status === 'ITEM_COMPLETED'" color="success">{{ 'Completed' }}</ion-badge>
+            <ion-badge slot="end" v-if="item.status === 'ITEM_APPROVED'" color="warning">{{ 'Approved' }}</ion-badge>
+            <ion-badge slot="end" v-if="item.status === 'ITEM_CANCELED'" color="danger">{{ 'Canceled' }}</ion-badge>
           </ion-item>
-          <ion-item>
-            <ion-label>{{ shipGroup.shipmentMethodTypeId }} </ion-label>
-            <ion-button @click="changePickupPreference"  color="medium" fill="outline">{{ $t("Change") }}</ion-button>
+          <ion-item v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
+            <ion-label>{{ $t('Store pickup') }}</ion-label>
+            <ion-button @click="updateShipmentAddress" color="medium" fill="outline">{{ $t("Get it delivered") }}</ion-button>
+          </ion-item>
+          <ion-item v-else>
+            <ion-label>{{ $t('Delivery') }}</ion-label>
+            <ion-button @click="changePickupPreference" color="medium" fill="outline">{{ $t("Pick up today") }}</ion-button>
+          </ion-item>
+          <ion-item v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" lines="full">
+            <ion-label slot="start">{{ shipGroup.shipmentMethodTypeId }}</ion-label>
+            <ion-label slot="end">{{ item.promisedDatetime }}</ion-label>
           </ion-item>
           <ion-item>
             <ion-list>
@@ -33,10 +44,12 @@
             <ion-label>{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
             <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
             </ion-list>
-            <ion-button  slot="end" color="medium" fill="outline" @click="updateShipmentAddress">{{ $t("Edit") }}</ion-button>
+            <ion-button slot="end" color="medium" fill="outline" v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="changePickupPreference">{{ $t("Change store") }}</ion-button>
+            <ion-button slot="end" color="medium" fill="outline" v-else @click="updateShipmentAddress">{{ $t("Edit address") }}</ion-button>
           </ion-item>
           <ion-item lines="none">
-            <ion-label color="danger">{{ $t("Cancel Item") }}</ion-label>
+            <ion-checkbox v-model="shipGroup.selected" slot="start" />
+            <ion-label>{{ $t("Cancel this item") }}</ion-label>
           </ion-item>
         </ion-card>
       </div>
@@ -49,6 +62,7 @@ import {
   IonBadge,
   IonButton,
   IonCard,
+  IonCheckbox,
   IonContent,
   IonItem,
   IonLabel,
@@ -66,6 +80,7 @@ import PickupPreferencePopover from "@/views/PickupPreferencePopover.vue";
 import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { mapGetters, useStore } from 'vuex'
 import Image from "@/components/Image.vue";
+import StoreModal from "./StoreModal.vue";
 
 const { Clipboard } = Plugins;
 
@@ -75,6 +90,7 @@ export default defineComponent({
     IonBadge,
     IonButton,
     IonCard,
+    IonCheckbox,
     IonContent,
     IonItem,
     IonLabel,
@@ -116,10 +132,10 @@ export default defineComponent({
       })
     },
     async changePickupPreference (ev: Event) {
-      const popover = await popoverController.create({
-        component: PickupPreferencePopover,
+      const modal = await modalController.create({
+        component: StoreModal,
       });
-      await popover.present();
+      await modal.present();
     },
     async updateShipmentAddress () {
       const modal = await modalController
@@ -141,5 +157,9 @@ export default defineComponent({
 <style scoped>
   h1 {
     text-align: center;
+  }
+  .border {
+    border: 1px solid #92949C;
+    border-radius: 8px;
   }
 </style>
