@@ -46,29 +46,13 @@
         <ion-label>{{ $t("Store name") }}</ion-label>
         <ion-checkbox slot="end" />
       </ion-item>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-    </ion-list>  
+    </ion-list>
     <ion-list>
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Other stores") }}</ion-label>
       </ion-list-header>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
+      <ion-item v-for="(facility, index) in facilities" :key="index">
+        <ion-label>{{ $t(facility.storeName) }}</ion-label>
         <ion-checkbox slot="end" />
       </ion-item>
     </ion-list>
@@ -81,6 +65,7 @@ import { defineComponent } from 'vue';
 import { businessOutline, closeOutline, mailOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
+import { mapGetters } from 'vuex';
 
 export default defineComponent({
   name: 'StoreModal',
@@ -91,6 +76,14 @@ export default defineComponent({
     },
   },
   props: ["shipGroup"],
+  computed: {
+    ...mapGetters({
+      facilities: 'facility/getFacilities'
+    })
+  },
+  mounted () {
+    this.store.dispatch('facility/fetchFacilities')
+  },
   setup() {
     const router = useRouter();
     const store = useStore();
