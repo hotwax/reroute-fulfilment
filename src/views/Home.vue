@@ -28,7 +28,7 @@
           </ion-item>
           <ion-item v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
             <ion-label>{{ $t('Store pickup') }}</ion-label>
-            <ion-button @click="updateShipmentAddress" color="medium" fill="outline">{{ $t("Get it delivered") }}</ion-button>
+            <ion-button @click="updateShipmentAddress(shipGroup)" color="medium" fill="outline">{{ $t("Get it delivered") }}</ion-button>
           </ion-item>
           <ion-item v-else>
             <ion-label>{{ $t('Delivery') }}</ion-label>
@@ -45,7 +45,7 @@
               <ion-label>{{ shipGroup.shipTo.postalAddress.city}} {{ shipGroup.shipTo.postalAddress.country}} {{ shipGroup.shipTo.postalAddress.postalCode}}</ion-label>
             </ion-list>
             <ion-button slot="end" color="medium" fill="outline" v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="changePickupPreference(shipGroup)">{{ $t("Change store") }}</ion-button>
-            <ion-button slot="end" color="medium" fill="outline" v-else @click="updateShipmentAddress">{{ $t("Edit address") }}</ion-button>
+            <ion-button slot="end" color="medium" fill="outline" v-else @click="updateShipmentAddress(shipGroup)">{{ $t("Edit address") }}</ion-button>
           </ion-item>
           <ion-item lines="none">
             <ion-checkbox v-model="shipGroup.selected" slot="start" />
@@ -140,10 +140,13 @@ export default defineComponent({
       });
       await modal.present();
     },
-    async updateShipmentAddress () {
+    async updateShipmentAddress (shipGroup: any) {
       const modal = await modalController
         .create({
-          component: ShipmentAddressModal
+          component: ShipmentAddressModal,
+          componentProps: {
+            shipGroup
+          }
         })
       return modal.present();
     }

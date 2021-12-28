@@ -7,16 +7,16 @@ import { hasError , showToast } from "@/utils";
 import { translate } from "@/i18n";
 import emitter from '@/event-bus'
 
-const actions: ActionTree<OrderState , RootState> ={
+const actions: ActionTree<OrderState , RootState> = {
   async getOrder ({ commit }, payload) {
     let resp;
     const obj = {
-          "sortBy": payload.sortBy,
-          "sortOrder": payload.sortOrder,
-          "viewSize": payload.viewSize,
-          "viewIndex": payload.viewIndex,
-          "facilityId": payload.facilityId
-      };
+      "sortBy": payload.sortBy,
+      "sortOrder": payload.sortOrder,
+      "viewSize": payload.viewSize,
+      "viewIndex": payload.viewIndex,
+      "facilityId": payload.facilityId
+    };
     try {
       resp = await OrderService.getOrder(obj);
       const order = resp.data;
@@ -34,15 +34,24 @@ const actions: ActionTree<OrderState , RootState> ={
         }
         return resp.data;
       } else {
-          showToast(translate("Orders Not Found"))
-          }         
-          if(payload.viewIndex === 0) emitter.emit("dismissLoader");
-          } catch(err){
-            console.log(err)
-            showToast(translate("Something went wrong"))
-          }
-          return resp;
+        showToast(translate("Orders Not Found"))
+      }
+      if(payload.viewIndex === 0) emitter.emit("dismissLoader");
+    } catch (err) {
+      console.log(err)
+      showToast(translate("Something went wrong"))
+    }
+    return resp;
   },
+
+  updateItemShipmentAddress ({ commit }, payload) {
+    const { firstName, lastName, street, city, shippingState, zipcode } = payload.shipmentAddress;
+    payload.shipGroup.shipTo.postalAddress.toName = firstName + lastName;
+    payload.shipGroup.shipTo.postalAddress.address1 = street;
+    payload.shipGroup.shipTo.postalAddress.city = city;
+    payload.shipGroup.shipTo.postalAddress.state = shippingState;
+    payload.shipGroup.shipTo.postalAddress.postalCode = zipcode;
   }
+}
 
 export default actions;

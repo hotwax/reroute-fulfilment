@@ -33,7 +33,7 @@
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Zip code") }}</ion-label>
-        <ion-input name="zipcode" v-model="shipmentAddress.zipcode" id="zipcode" type="number" required />
+        <ion-input name="zipcode" v-model="shipmentAddress.zipcode" id="zipcode" required />
       </ion-item>
     </ion-list>
     <div class="details">
@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonInput, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle,  IonToolbar,modalController } from '@ionic/vue';
+import { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonInput, IonLabel, IonList, IonTitle,  IonToolbar,modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
@@ -51,7 +51,7 @@ import { useStore } from "@/store";
 
 export default defineComponent({
   name: 'ShipmentModal',  
-  components: { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonInput, IonLabel, IonList, IonSelect, IonSelectOption, IonTitle,  IonToolbar},
+  components: { IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonInput, IonLabel, IonList, IonTitle,  IonToolbar},
   data() {
     return {
       shipmentAddress:{
@@ -61,13 +61,16 @@ export default defineComponent({
         city: "",
         state: "",
         zipcode: ""
-      }     
+      }
     };
   },
-  methods:{
+  props: ["shipGroup"],
+  methods: {
     updateShipmentAddress() {
-      if (this.shipmentAddress) {
-        this.store.dispatch('user/shipmentAddress', this.shipmentAddress);
+      // TODO: use a more optimize way correct to check for empty fields
+      if (this.shipmentAddress.firstName !== "" && this.shipmentAddress.lastName !== "" && this.shipmentAddress.street !== "" && this.shipmentAddress.city !== "" && this.shipmentAddress.state !== "" && this.shipmentAddress.zipcode !== "") {
+        this.store.dispatch('order/updateItemShipmentAddress', {shipGroup: this.shipGroup, shipmentAddress: this.shipmentAddress});
+        this.closeShipmentModal();
       }
     },
     closeShipmentModal(){
