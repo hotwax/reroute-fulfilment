@@ -12,46 +12,34 @@
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-label position="floating">{{ $t("Street name") }}
-        <ion-input name="streetname" v-model="shipmentAddress.streetname" id="streetname"  type="text" required></ion-input></ion-label>
-        <ion-input />
-      </ion-item> 
-      <ion-item>
-        <ion-label position="floating">{{ $t("House/Apartment number") }}
-        <ion-input name="apartmentnumber" v-model="shipmentAddress.apartmentnumber" id="apartmentnumber"  type="number" required></ion-input></ion-label>
-        <ion-input />
-      </ion-item>     
-      <ion-item>
-        <ion-label position="floating">{{ $t("City") }}
-        <ion-input name="city" v-model="shipmentAddress.city" id="city"  type="text" required></ion-input></ion-label> 
-        <ion-input />
-      </ion-item>     
-      <ion-item>
-        <ion-label position="floating">{{ $t("State / Province") }}
-        <ion-input name="state" v-model="shipmentAddress.state" id="state"  type="text" required></ion-input></ion-label> 
-        <ion-input />
+        <ion-label position="floating">{{ $t("First name") }}</ion-label>
+        <ion-input name="firstName" v-model="shipmentAddress.firstName" id="firstName" type="text" required />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Zip code") }}
-        <ion-input name="zipcode" v-model="shipmentAddress.zipcode" id="zipcode"  type="number" required></ion-input></ion-label> 
-        <ion-input />
+        <ion-label position="floating">{{ $t("Last name") }}</ion-label>
+        <ion-input name="lastName" v-model="shipmentAddress.lastName" id="lastName" type="text" required />
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Country") }}
-        <ion-input name="country" v-model="shipmentAddress.country" id="country" required></ion-input></ion-label>
-        <ion-input />
-        <ion-select>
-          <ion-select-option>Afghanistan</ion-select-option>
-          <ion-select-option>Albania</ion-select-option>
-          <ion-select-option>India</ion-select-option>
-          <ion-select-option>United States</ion-select-option>   
-        </ion-select>
+        <ion-label position="floating">{{ $t("Street") }}</ion-label>
+        <ion-input name="street" v-model="shipmentAddress.street" id="street" type="text" required />
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">{{ $t("City") }}</ion-label>
+        <ion-input name="city" v-model="shipmentAddress.city" id="city" type="text" required />
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">{{ $t("State") }}</ion-label>
+        <ion-input name="state" v-model="shipmentAddress.state" id="state" type="text" required />
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">{{ $t("Zip code") }}</ion-label>
+        <ion-input name="zipcode" v-model="shipmentAddress.zipcode" id="zipcode" type="number" required />
       </ion-item>
     </ion-list>
     <div class="details">
-    <ion-button @click="updateShipmentAddress()">{{ $t("Ship to this address") }}</ion-button>
+      <ion-button @click="updateShipmentAddress()">{{ $t("Ship to this address") }}</ion-button>
     </div>
- </ion-content>
+  </ion-content>
 </template>
 
 <script lang="ts">
@@ -67,21 +55,21 @@ export default defineComponent({
   data() {
     return {
       shipmentAddress:{
-      streetname: "",
-      apartmentnumber: "",
-      city: "",
-      state: "",
-      zipcode: "",
-      country: ""
+        firstName: "",
+        lastName: "",
+        street: "",
+        city: "",
+        state: "",
+        zipcode: ""
       }     
     };
   },
   methods:{
     updateShipmentAddress() {
-        if (this.shipmentAddress) {
-          this.store.dispatch('user/shipmentAddress', this.shipmentAddress);
-        }
-      },
+      if (this.shipmentAddress) {
+        this.store.dispatch('user/shipmentAddress', this.shipmentAddress);
+      }
+    },
     closeShipmentModal(){
       modalController.dismiss({dismissed:true});
     },
