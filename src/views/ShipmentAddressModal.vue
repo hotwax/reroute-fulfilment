@@ -49,7 +49,7 @@
       </ion-item>
     </ion-list>
     <div class="details">
-    <ion-button @click="updateShipmentAddress()">{{ $t("Save") }}</ion-button>
+    <ion-button @click="updateShipmentAddress()">{{ $t("Ship to this address") }}</ion-button>
     </div>
  </ion-content>
 </template>

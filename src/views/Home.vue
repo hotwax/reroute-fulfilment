@@ -7,7 +7,7 @@
           {{ order.customerName }}
           <p>{{ order.id }}</p>
         </ion-label>
-        <ion-note slot="end">{{ order.orderDate }}</ion-note>
+        <ion-note slot="end">{{ moment(order.orderDate).local().format("MMM Do YYYY") }}</ion-note>
       </ion-item>
       <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
         <ion-card v-for="item of shipGroup.items" :key="item.id">
@@ -53,6 +53,7 @@
           </ion-item>
         </ion-card>
       </div>
+      <ion-button>{{ $t("Save changes to order") }}</ion-button>
     </ion-content>
   </ion-page>
 </template>
@@ -70,7 +71,6 @@ import {
   IonNote,
   IonPage,
   IonThumbnail,
-  popoverController,
   modalController
 } from "@ionic/vue";
 import { defineComponent } from "vue";
@@ -80,6 +80,7 @@ import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { mapGetters, useStore } from 'vuex'
 import Image from "@/components/Image.vue";
 import StoreModal from "./StoreModal.vue";
+import moment from 'moment';
 
 const { Clipboard } = Plugins;
 
@@ -150,6 +151,7 @@ export default defineComponent({
   setup () {
     const store = useStore();
     return {
+      moment,
       store
     }
   }
