@@ -30,7 +30,6 @@ const actions: ActionTree<FacilityState , RootState> ={
       if (resp.status === 200 && resp.data.response.numFound > 0 && !hasError(resp)) {
         commit(types.FACILITY_UPDATED, { facilities: resp.data.response.docs })
       }
-      console.log(resp)
     } catch(err) {
       console.log(err)
       console.error("Something went wrong")

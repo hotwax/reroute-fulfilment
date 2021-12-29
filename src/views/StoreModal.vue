@@ -44,7 +44,7 @@
           <ion-label>{{ $t("Nearby stores") }}</ion-label>
         </ion-list-header>
         <ion-item v-for="(facility, index) in nearbyFacilities()" :key="index">
-          <ion-label>{{ $t(facility.storeName) }}</ion-label>
+          <ion-label>{{ facility.storeName }}</ion-label>
           <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(shipGroup, facility)"/>
         </ion-item>
       </ion-list>
@@ -53,7 +53,7 @@
           <ion-label>{{ $t("Other stores") }}</ion-label>
         </ion-list-header>
         <ion-item v-for="(facility, index) in otherFacilities()" :key="index">
-          <ion-label>{{ $t(facility.storeName) }}</ion-label>
+          <ion-label>{{ facility.storeName }}</ion-label>
           <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(shpGroup, facility)"/>
         </ion-item>
       </ion-list>

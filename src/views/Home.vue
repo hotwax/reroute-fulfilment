@@ -22,9 +22,9 @@
               <p>{{ $t("Size") }}: {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
             </ion-label>
             <!-- TODO: handle all the status cases correctly -->
-            <ion-badge slot="end" v-if="item.status === 'ITEM_COMPLETED'" color="success">{{ 'Completed' }}</ion-badge>
-            <ion-badge slot="end" v-if="item.status === 'ITEM_APPROVED'" color="warning">{{ 'Approved' }}</ion-badge>
-            <ion-badge slot="end" v-if="item.status === 'ITEM_CANCELED'" color="danger">{{ 'Canceled' }}</ion-badge>
+            <ion-badge slot="end" v-if="item.status === 'ITEM_COMPLETED'" color="success">{{ $t('Completed') }}</ion-badge>
+            <ion-badge slot="end" v-if="item.status === 'ITEM_APPROVED'" color="warning">{{ $t('Approved') }}</ion-badge>
+            <ion-badge slot="end" v-if="item.status === 'ITEM_CANCELED'" color="danger">{{ $t('Canceled') }}</ion-badge>
           </ion-item>
           <ion-item v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
             <ion-label>{{ $t('Store pickup') }}</ion-label>
