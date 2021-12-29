@@ -42,8 +42,8 @@
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby stores") }}</ion-label>
       </ion-list-header>
-      <ion-item>
-        <ion-label>{{ $t("Store name") }}</ion-label>
+      <ion-item v-for="(facility, index) in nearbyFacilities()" :key="index">
+        <ion-label>{{ $t(facility.storeName) }}</ion-label>
         <ion-checkbox slot="end" />
       </ion-item>
     </ion-list>
@@ -51,7 +51,7 @@
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Other stores") }}</ion-label>
       </ion-list-header>
-      <ion-item v-for="(facility, index) in facilities" :key="index">
+      <ion-item v-for="(facility, index) in otherFacilities()" :key="index">
         <ion-label>{{ $t(facility.storeName) }}</ion-label>
         <ion-checkbox slot="end" />
       </ion-item>
@@ -74,6 +74,26 @@ export default defineComponent({
     closeModal () {
       modalController.dismiss({ dismissed: true });
     },
+    nearbyFacilities () {
+      // TODO: need to optimize code to properly handle the condition to display stores
+      let i = 0;
+      return Object.values(this.facilities).filter((facility: any) => {
+        if (i < 3) {
+          i++;
+          return facility
+        }
+      })
+    },
+    otherFacilities () {
+      // TODO: need to optimize code to properly handle the condition to display stores
+      let i = 3;
+      return Object.values(this.facilities).slice(3).filter((facility: any) => {
+        if (i < this.facilities.length - 3) {
+          i++;
+          return facility
+        }
+      })
+    }
   },
   props: ["shipGroup"],
   computed: {

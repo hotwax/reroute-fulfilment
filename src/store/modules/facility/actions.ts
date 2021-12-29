@@ -8,12 +8,17 @@ import * as types from './mutation-types'
 const actions: ActionTree<FacilityState , RootState> ={
   async fetchFacilities ({ commit }, payload) {
 
+    // currently hardcoded the lat lng and distance
     const query = {
       "json": {
         "params": {
-          "rows": 1000,
-          "q": "docType:STORE AND storeCode : *",
-          "q.op": "AND"
+          "q": "docType:STORE",
+          "pt": "40.72, -74",
+          "d": "50000",
+          "fq": "{!geofilt}",
+          "sort": "geodist() asc",
+          "sfield": "latlon",
+          "rows": 50
         }
       }
     }

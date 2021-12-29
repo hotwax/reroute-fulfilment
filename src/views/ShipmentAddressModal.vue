@@ -7,7 +7,7 @@
           <ion-icon :icon="closeOutline" />
         </ion-button>
       </ion-buttons>  
-    </ion-toolbar>   
+    </ion-toolbar>
   </ion-header> 
   <ion-content>
     <ion-list>
@@ -74,7 +74,7 @@ export default defineComponent({
       }
     },
     closeShipmentModal(){
-      modalController.dismiss({dismissed:true});
+      modalController.dismiss({ dismissed:true });
     },
   },
   setup() {

@@ -45,6 +45,9 @@ const actions: ActionTree<OrderState , RootState> = {
   },
 
   updateItemShipmentAddress ({ commit }, payload) {
+    if (payload.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+      payload.shipGroup.shipmentMethodTypeId = 'STANDARD'
+    }
     const { firstName, lastName, street, city, shippingState, zipcode } = payload.shipmentAddress;
     payload.shipGroup.shipTo.postalAddress.toName = firstName + lastName;
     payload.shipGroup.shipTo.postalAddress.address1 = street;
