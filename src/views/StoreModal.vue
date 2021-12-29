@@ -38,29 +38,31 @@
         <ion-note slot="end">{{ shipGroup.shipmentMethodTypeId }}</ion-note>
       </ion-item>
     </ion-card>
-    <ion-list>
-      <ion-list-header lines="full" color="light">
-        <ion-label>{{ $t("Nearby stores") }}</ion-label>
-      </ion-list-header>
-      <ion-item v-for="(facility, index) in nearbyFacilities()" :key="index">
-        <ion-label>{{ $t(facility.storeName) }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-    </ion-list>
-    <ion-list>
-      <ion-list-header lines="full" color="light">
-        <ion-label>{{ $t("Other stores") }}</ion-label>
-      </ion-list-header>
-      <ion-item v-for="(facility, index) in otherFacilities()" :key="index">
-        <ion-label>{{ $t(facility.storeName) }}</ion-label>
-        <ion-checkbox slot="end" />
-      </ion-item>
-    </ion-list>
+    <ion-radio-group>
+      <ion-list>
+        <ion-list-header lines="full" color="light">
+          <ion-label>{{ $t("Nearby stores") }}</ion-label>
+        </ion-list-header>
+        <ion-item v-for="(facility, index) in nearbyFacilities()" :key="index">
+          <ion-label>{{ $t(facility.storeName) }}</ion-label>
+          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(facility)"/>
+        </ion-item>
+      </ion-list>
+      <ion-list>
+        <ion-list-header lines="full" color="light">
+          <ion-label>{{ $t("Other stores") }}</ion-label>
+        </ion-list-header>
+        <ion-item v-for="(facility, index) in otherFacilities()" :key="index">
+          <ion-label>{{ $t(facility.storeName) }}</ion-label>
+          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(facility)"/>
+        </ion-item>
+      </ion-list>
+    </ion-radio-group>
   </ion-content>
 </template>
 
 <script lang="ts">
-import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle,  IonToolbar,modalController, popoverController } from '@ionic/vue';
+import { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonRadio, IonRadioGroup, IonTitle,  IonToolbar,modalController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { businessOutline, closeOutline, mailOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
@@ -69,7 +71,7 @@ import { mapGetters } from 'vuex';
 
 export default defineComponent({
   name: 'StoreModal',
-  components: { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle, IonCheckbox,IonContent, IonHeader, IonIcon, IonItem, IonList, IonListHeader, IonLabel, IonNote, IonTitle,  IonToolbar},
+  components: { IonButton, IonButtons, IonCard, IonCardHeader, IonCardTitle,IonContent, IonHeader, IonIcon, IonItem, IonList, IonListHeader, IonLabel, IonNote, IonRadio, IonRadioGroup, IonTitle,  IonToolbar},
   methods: {
     closeModal () {
       modalController.dismiss({ dismissed: true });
@@ -93,6 +95,9 @@ export default defineComponent({
           return facility
         }
       })
+    },
+    storeSelected (facility: any) {
+      this.closeModal();
     }
   },
   props: ["shipGroup"],
