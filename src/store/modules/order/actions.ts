@@ -45,6 +45,7 @@ const actions: ActionTree<OrderState , RootState> = {
   },
 
   updateItemShipmentAddress ({ commit }, payload) {
+    // TODO: use API to update the order information
     if (payload.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
       payload.shipGroup.shipmentMethodTypeId = 'STANDARD'
     }
@@ -54,6 +55,20 @@ const actions: ActionTree<OrderState , RootState> = {
     payload.shipGroup.shipTo.postalAddress.city = city;
     payload.shipGroup.shipTo.postalAddress.state = shippingState;
     payload.shipGroup.shipTo.postalAddress.postalCode = zipcode;
+  },
+
+  updateStoreInformation ({ commit }, payload) {
+    // TODO: use API to update the order information
+    if (payload.shipGroup.shipmentMethodTypeId !== 'STOREPICKUP') {
+      payload.shipGroup.shipmentMethodTypeId = 'STOREPICKUP'
+    }
+
+    const { storeName, address1, city, state, postalCode } = payload.facility;
+    payload.shipGroup.shipTo.postalAddress.toName = storeName;
+    payload.shipGroup.shipTo.postalAddress.address1 = address1;
+    payload.shipGroup.shipTo.postalAddress.city = city;
+    payload.shipGroup.shipTo.postalAddress.state = state;
+    payload.shipGroup.shipTo.postalAddress.postalCode = postalCode;
   }
 }
 

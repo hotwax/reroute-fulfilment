@@ -45,7 +45,7 @@
         </ion-list-header>
         <ion-item v-for="(facility, index) in nearbyFacilities()" :key="index">
           <ion-label>{{ $t(facility.storeName) }}</ion-label>
-          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(facility)"/>
+          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(shipGroup, facility)"/>
         </ion-item>
       </ion-list>
       <ion-list>
@@ -54,7 +54,7 @@
         </ion-list-header>
         <ion-item v-for="(facility, index) in otherFacilities()" :key="index">
           <ion-label>{{ $t(facility.storeName) }}</ion-label>
-          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(facility)"/>
+          <ion-radio slot="end" :value="facility.storeName" @click="storeSelected(shpGroup, facility)"/>
         </ion-item>
       </ion-list>
     </ion-radio-group>
@@ -96,7 +96,8 @@ export default defineComponent({
         }
       })
     },
-    storeSelected (facility: any) {
+    storeSelected (shipGroup: any, facility: any) {
+      this.store.dispatch("order/updateStoreInformation", {shipGroup, facility})
       this.closeModal();
     }
   },
