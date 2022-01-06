@@ -6,11 +6,11 @@ const getters: GetterTree<ProductState, RootState> = {
   getSearchProducts(state) {
     return state.products.list;
   },
-  isScrollable(state) {
-    return (
-      state.products.list.length > 0 &&
-      state.products.list.length < state.products.total
-    );
+  getCached (state) {
+    return state.cached
+  },
+  getProduct: (state) => (productId: string) => {
+    return state.cached[productId] ? state.cached[productId] : {};
   },
 };
 export default getters;
