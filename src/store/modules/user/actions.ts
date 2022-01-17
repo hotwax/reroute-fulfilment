@@ -62,13 +62,6 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
-
-  /**
-   * update current facility information
-   */
-  async setFacility ({ commit }, payload) {
-    commit(types.USER_CURRENT_FACILITY_UPDATED, payload.facility);
-  },
   
   /**
    * Update user timeZone
