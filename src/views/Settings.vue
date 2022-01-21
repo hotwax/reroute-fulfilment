@@ -14,6 +14,13 @@
         <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
       </ion-item>
 
+      <!-- OMS information -->
+      <ion-item>
+        <ion-icon :icon="codeWorkingOutline" slot="start"/>
+        <ion-label>{{ $t("OMS") }}</ion-label>
+        <ion-label slot="end">{{ instanceUrl }}</ion-label>
+      </ion-item>
+
     </ion-content>
   </ion-page>
 </template>
@@ -21,7 +28,7 @@
 <script lang="ts">
 import { alertController, IonButton, IonContent, IonHeader,IonIcon, IonItem, IonLabel, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { ellipsisVertical, personCircleOutline, storefrontOutline} from 'ionicons/icons'
+import { codeWorkingOutline, ellipsisVertical, personCircleOutline, storefrontOutline} from 'ionicons/icons'
 import { mapGetters, useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
@@ -41,6 +48,7 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       userProfile: 'user/getUserProfile',
+      instanceUrl: 'user/getInstanceUrl'
     })
   },
   methods: {
@@ -55,6 +63,7 @@ export default defineComponent({
     const router = useRouter();
 
     return {
+      codeWorkingOutline,
       ellipsisVertical,
       personCircleOutline,
       storefrontOutline,
@@ -64,3 +73,8 @@ export default defineComponent({
   }
 });
 </script>
+<style scoped>
+ion-label[slot="end"] {
+  text-align: end;
+}
+</style>
