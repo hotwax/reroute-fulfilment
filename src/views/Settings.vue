@@ -7,18 +7,18 @@
     </ion-header>
     
     <ion-content :fullscreen="true">
-      <!-- Profile of user logged in -->
-      <ion-item>
-        <ion-icon :icon="personCircleOutline" slot="start" />
-        <ion-label>{{ userProfile !== null ? userProfile.partyName : '' }}</ion-label>
-        <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
-      </ion-item>
-
       <!-- OMS information -->
       <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
         <ion-label>{{ $t("OMS") }}</ion-label>
         <p slot="end">{{ instanceUrl }}</p>
+      </ion-item>
+      
+      <!-- Profile of user logged in -->
+      <ion-item>
+        <ion-icon :icon="personCircleOutline" slot="start" />
+        <ion-label>{{ userProfile !== null ? userProfile.partyName : '' }}</ion-label>
+        <ion-button slot="end" fill="outline" color="dark" @click="logout()">{{ $t("Logout") }}</ion-button>
       </ion-item>
 
     </ion-content>
