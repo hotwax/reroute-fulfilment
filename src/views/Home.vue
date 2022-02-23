@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-content :fullscreen="true">
+    <ion-content>
       <h1>{{ $t("Your Order") }}</h1>
       <ion-card>
         <ion-item lines="none">

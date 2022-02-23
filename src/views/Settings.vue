@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     
-    <ion-content :fullscreen="true">
+    <ion-content>
       <!-- OMS information -->
       <ion-item>
         <ion-icon :icon="codeWorkingOutline" slot="start"/>
