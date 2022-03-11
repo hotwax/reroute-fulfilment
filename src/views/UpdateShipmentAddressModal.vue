@@ -4,10 +4,10 @@
       <ion-title>{{ $t("Shipment Details") }}</ion-title>
       <ion-buttons slot="end" @click="closeShipmentModal()" >
         <ion-button >
-          <ion-icon :icon="closeOutline" />
+          <ion-icon slot="icon-only" :icon="closeOutline" />
         </ion-button>
       </ion-buttons>  
-    </ion-toolbar>   
+    </ion-toolbar>
   </ion-header> 
   <ion-content>
     <ion-list>
