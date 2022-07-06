@@ -19,8 +19,7 @@ import {
   IonLabel
 } from '@ionic/vue'
 import { useRouter } from 'vue-router'
-import { useStore, mapGetters } from 'vuex';
-import { Settings } from 'luxon'
+import { useStore } from 'vuex';
 
 export default defineComponent({
   name: "ProductListItem",
@@ -35,17 +34,7 @@ export default defineComponent({
       //TODO need to implement updateCurrentProduct action
       await this.store.dispatch('product/updateCurrentProduct', {product: this.product});
       this.router.push({ path: `/product/${this.product.sku}` })
-      // Handles case when user resumes or reloads the app
-      // Luxon timezone should be set with the user's selected timezone
-      if (this.userProfile && this.userProfile.userTimeZone) {
-        Settings.defaultZone = this.userProfile.userTimeZone;
-      }
     },
-  },
-  computed: {
-    ...mapGetters({
-      userProfile: 'user/getUserProfile',
-    })
   },
   setup() {
     const router = useRouter();
