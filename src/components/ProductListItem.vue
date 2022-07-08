@@ -34,7 +34,7 @@ export default defineComponent({
       //TODO need to implement updateCurrentProduct action
       await this.store.dispatch('product/updateCurrentProduct', {product: this.product});
       this.router.push({ path: `/product/${this.product.sku}` })
-    },
+    }
   },
   setup() {
     const router = useRouter();
