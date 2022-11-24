@@ -6,14 +6,17 @@
   "targets": {
     "hotwax-digital-commerce": {
       "hosting": {
-        "dev-reroute-fulfilment": [
+        "dev": [
           "dev-reroute-fulfilment"
+        ],
+        "uat": [
+          "uat-reroute-fulfilment"
         ]
       }
     },
     "digital-commerce-71eb8": {
       "hosting": {
-        "reroute-fulfilment": [
+        "prod": [
           "reroute-fulfilment"
         ]
       }
