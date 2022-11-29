@@ -10,7 +10,7 @@
           "dev-reroute-fulfilment"
         ],
         "uat": [
-          "uat-reroute-fulfilment"
+          "reroute-fulfilment-uat"
         ]
       }
     },
