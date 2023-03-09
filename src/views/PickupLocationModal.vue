@@ -10,14 +10,11 @@
     </ion-toolbar>
   </ion-header>
   <ion-content>
-    <ion-card>
+    <ion-card v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
       <ion-item lines="none">
         <ion-label>{{ $t("Showing pickup locations near") }}</ion-label>
       </ion-item>
-      <ion-item v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
-        <ion-label color="dark">{{ shipGroup.facilityName }}</ion-label>
-      </ion-item>
-      <ion-item v-else>
+      <ion-item>
         <ion-list>
           <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
           <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
@@ -32,7 +29,8 @@
         </ion-list-header>
         <ion-item v-for="store of nearbyStores" :key="store.facilityId" lines="none">
           <ion-label>{{ store.facilityName }}</ion-label>
-          <ion-label slot="end">distance</ion-label>
+          <!-- Showing store distance in miles -->
+          <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
           <ion-radio :value="store.facilityId" slot="end" />
         </ion-item>
       </ion-list>
@@ -94,7 +92,7 @@ export default defineComponent({
   },
   data() {
     return {
-      nearbyStores: {} as any,
+      nearbyStores: [] as any,
       facilityId: ''
     }
   },
@@ -105,48 +103,41 @@ export default defineComponent({
   methods: {
     async getNearbyStores() {
       try {
-        let shipGroupLocationResp
+        let shipGroupLocationResp: any, productInventoryResp: any, storeLookupResp: any, facilityIds;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && this.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP') {
-          shipGroupLocationResp = await FacilityService.getNearByStores({
-            "viewSize": 50,
+          storeLookupResp = await FacilityService.getNearByStores({
+            "viewSize": 60,
             "filters": ["storeType: RETAIL_STORE"],
-            "sortBy": "storeName asc",
           })
-
-          const facilityIds = shipGroupLocationResp.data.response.docs.map((store: any) => store.storeCode)
-          const productInventoryResp = await StockService.checkInventory({
-            "filters": {
-              "productId": this.productIds,
-              "facilityId": facilityIds
-            },
-            "fieldsToSelect": ["atp", "facilityName", "facilityId"],
-          });
-          this.nearbyStores = productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
         } else {
-          shipGroupLocationResp = await FacilityService.getLatLong({
+          shipGroupLocationResp = await FacilityService.getLocation({
             "json": {
               "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
             }
           })
-          const storeLookupResp = await FacilityService.getNearByStores({
-            "viewSize": 50,
+          storeLookupResp = await FacilityService.getNearByStores({
+            "viewSize": 60,
             "filters": ["storeType: RETAIL_STORE"],
             // "point": shipGroupLocationResp.data.response.docs[0].location,
             "point": "25.78,-80.36",
             "distance": 50,
             "fieldsToSelect": ["storeCode", "storeName", "dist"]
           })
-          const facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
-          const productInventoryResp = await StockService.checkInventory({
-            "filters": {
-              "productId": this.productIds,
-              "facilityId": facilityIds
-            },
-            "fieldsToSelect": ["atp", "facilityName", "facilityId"],
-          });
-          this.nearbyStores = productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
-          console.log('this.nearbyStores', this.nearbyStores)
         }
+        facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
+        productInventoryResp = await StockService.checkInventory({
+          "filters": {
+            "productId": this.productIds,
+            "facilityId": facilityIds
+          },
+          "fieldsToSelect": ["atp", "facilityName", "facilityId"],
+        });
+
+        const storesWithInventory = productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
+        storesWithInventory.map((store: any) => {
+          const storeDetails = storeLookupResp.data.response.docs.find((data: any) => data.storeCode === store.facilityId );
+          if (storeDetails) this.nearbyStores.push({...store, distance: storeDetails.dist});
+        });
       } catch (error) {
         console.error(error)
         showToast(translate("Something went wrong while fetching nearby stores"));
@@ -163,7 +154,7 @@ export default defineComponent({
 
     closeShipmentAddressModal(facilityId?: string) {
       modalController.dismiss({ dismissed: true }, facilityId);
-    },
+    }
   },
   setup() {
     const router = useRouter();

@@ -9,7 +9,7 @@ const getNearByStores = async (payload: any): Promise <any>  => {
   });
 }
 
-const getLatLong = async (payload: any): Promise <any>  => {
+const getLocation = async (payload: any): Promise <any>  => {
   return api({
     url: "postcodeLookup", 
     method: "post",
@@ -20,5 +20,5 @@ const getLatLong = async (payload: any): Promise <any>  => {
 
 export const FacilityService = {
   getNearByStores,
-  getLatLong
+  getLocation
 }
