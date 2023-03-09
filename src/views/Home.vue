@@ -139,20 +139,15 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.getOrder(process.env.VUE_APP_VIEW_SIZE, 0);
+    await this.getOrder();
   },
   methods: {
-    async getOrder(vSize: any, vIndex: any) {
-      const viewSize = vSize ? vSize : process.env.VUE_APP_VIEW_SIZE;
-      const viewIndex = vIndex ? vIndex : 0;
-
+    async getOrder() {
       let resp;
-      const payload = { viewSize, viewIndex };
       try {
-        resp = await OrderService.getOrder(payload);
+        resp = await OrderService.getOrder(this.$route.params.orderId);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           this.order = resp.data;
-          console.log('this.order.shipGroup[0]', this.order)
           let productIds: any = new Set();
           this.order.shipGroup.map((group: any) => {
             group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
@@ -217,9 +212,8 @@ export default defineComponent({
 
       try {
         resp = await OrderService.updateShippingAddress(payload);
-        console.log(resp);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          // add tracking detials
+          // TODO add tracking detials
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Something went wrong"))
@@ -238,16 +232,13 @@ export default defineComponent({
         "contactMechId": shipGroup.shipTo.postalAddress.id,
         "shipmentMethod": `STOREPICKUP@_NA_@CARRIER`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
-        // "facilityId": shipGroup.selectedFacilityId,
-        "facilityId": "WH",
-        // "facilityId": "STORE_1"
+        "facilityId": shipGroup.selectedFacilityId,
       }
 
       try {
         resp = await OrderService.updateFacility(payload);
-        console.log(resp);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          // add tracking detials
+          // TODO add tracking detials
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Something went wrong"))

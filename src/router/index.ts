@@ -22,13 +22,12 @@ const loginGuard = (to: any, from: any, next: any) => {
 };
 
 const routes: Array<RouteRecordRaw> = [
-  // {
-  //   path: '/',
-  //   redirect: "/order/:orderId",
-  // },
   {
     path: '/',
-    // path: "/order/:orderId",
+    redirect: "/orders/:orderId",
+  },
+  {
+    path: "/orders/:orderId",
     name: "Home",
     component: Home,
     beforeEnter: authGuard

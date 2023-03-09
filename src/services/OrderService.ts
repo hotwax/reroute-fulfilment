@@ -1,13 +1,9 @@
 import api from '@/api';
 
-const getOrder = async (payload: any): Promise <any>  => {
+const getOrder = async (orderId: any): Promise <any>  => {
   return api({
-    // url: "orders/10707", // perryellis
-    url: "orders/10273", // dev-hc and perryellis standard
-    // url: "orders/11430", // dev-hc storepickup
-    // url: "orders/10707", // perryellis storepickup
-    method: "post",
-    data: payload,
+    url: `orders/${orderId}`,
+    method: "get",
     cache: true
   });
 }

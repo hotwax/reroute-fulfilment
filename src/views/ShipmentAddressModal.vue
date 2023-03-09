@@ -88,21 +88,13 @@ export default defineComponent({
   },
   data() {
     return {
-      // shipmentAddress: {
-      //   firstName: "",
-      //   lastName: "",
-      //   address1: "",
-      //   city: "",
-      //   stateCode: "",
-      //   postalCode: ""
-      // },
       shipmentAddress: {
-        firstName: "Andrew",
-        lastName: "Smith",
-        address1: "Hotwax Street",
-        city: "Salt Lake City",
-        stateCode: "UT",
-        postalCode: "84111",
+        firstName: "",
+        lastName: "",
+        address1: "",
+        city: "",
+        stateCode: "",
+        postalCode: "",
         country: "USA"
       },
       contactMechId: '',
@@ -129,8 +121,11 @@ export default defineComponent({
         const payload = {
           // Currently giving support for states within the same country only
           // TODO: add support for fetching states from other country
-          "countryGeoId": "USA",
+          
+          // Previously countryGeoId was as - 
           // "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
+          // but now the data doesn't source us that, hence, hardcoding for now.
+          "countryGeoId": "USA",
           "viewSize": 60
         }
         const resp = await OrderService.getAssociatedStates(payload);

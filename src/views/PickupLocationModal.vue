@@ -70,7 +70,7 @@ import { useStore } from "@/store";
 import { FacilityService } from '@/services/FacilityService';
 import { StockService } from '@/services/StockService';
 import { translate } from '@/i18n';
-import { showToast } from '@/utils';
+import { hasError, showToast } from '@/utils';
 
 export default defineComponent({
   name: 'StoreModal',
@@ -105,24 +105,36 @@ export default defineComponent({
       try {
         let shipGroupLocationResp: any, productInventoryResp: any, storeLookupResp: any, facilityIds;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && this.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP') {
-          storeLookupResp = await FacilityService.getNearByStores({
+          storeLookupResp = await FacilityService.getStores({
             "viewSize": 60,
             "filters": ["storeType: RETAIL_STORE"],
           })
+
+          if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
+            return showToast(translate("Something went wrong while fetching nearby stores"))
+          }
         } else {
           shipGroupLocationResp = await FacilityService.getLocation({
             "json": {
               "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
             }
           })
-          storeLookupResp = await FacilityService.getNearByStores({
+
+          if (shipGroupLocationResp.status !== 200 || hasError(shipGroupLocationResp) || !shipGroupLocationResp.data.response.numFound) {
+            return showToast(translate("Something went wrong while fetching nearby stores"))
+          }
+
+          storeLookupResp = await FacilityService.getStores({
             "viewSize": 60,
             "filters": ["storeType: RETAIL_STORE"],
-            // "point": shipGroupLocationResp.data.response.docs[0].location,
-            "point": "25.78,-80.36",
+            "point": shipGroupLocationResp.data.response.docs[0].location,
             "distance": 50,
             "fieldsToSelect": ["storeCode", "storeName", "dist"]
           })
+
+          if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
+            return showToast(translate("Something went wrong while fetching nearby stores"))
+          }
         }
         facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
         productInventoryResp = await StockService.checkInventory({
@@ -133,6 +145,9 @@ export default defineComponent({
           "fieldsToSelect": ["atp", "facilityName", "facilityId"],
         });
 
+        if (productInventoryResp.status !== 200 || hasError(productInventoryResp) || !productInventoryResp.data.count) {
+          return showToast(translate("Something went wrong while fetching nearby stores"))
+        }
         const storesWithInventory = productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
         storesWithInventory.map((store: any) => {
           const storeDetails = storeLookupResp.data.response.docs.find((data: any) => data.storeCode === store.facilityId );
