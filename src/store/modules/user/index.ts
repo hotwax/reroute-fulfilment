@@ -10,7 +10,8 @@ const userModule: Module<UserState, RootState> = {
     state: {
       token: '',
       current: null,
-      instanceUrl: ''
+      instanceUrl: '',
+      deliveryMethod: ''
     },
     getters,
     actions,

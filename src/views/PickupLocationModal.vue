@@ -27,7 +27,7 @@
         <ion-list-header lines="full" color="light">
           <ion-label>{{ $t("Nearby stores") }}</ion-label>
         </ion-list-header>
-        <ion-item v-for="store of nearbyStores" :key="store.facilityId" lines="none">
+        <ion-item v-for="store of nearbyStores" :key="store.facilityId">
           <ion-label>{{ store.facilityName }}</ion-label>
           <!-- Showing store distance in miles -->
           <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
@@ -138,6 +138,8 @@ export default defineComponent({
           const storeDetails = storeLookupResp.data.response.docs.find((data: any) => data.storeCode === store.facilityId );
           if (storeDetails) this.nearbyStores.push({...store, distance: storeDetails.dist});
         });
+        // sorting in alphabetical order 
+        this.nearbyStores.sort((a: any, b: any) => a.facilityName.localeCompare(b.facilityName))
       } catch (error) {
         console.error(error)
         showToast(translate("Something went wrong while fetching nearby stores"));

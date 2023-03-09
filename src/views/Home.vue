@@ -17,7 +17,7 @@
         <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
           <!-- Only show shipGroups having product/items -->
           <ion-card v-if="shipGroup.items.length">
-            <ion-item v-for="item of shipGroup.items" :key="item.id" lines="none">
+            <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">
               <ion-thumbnail slot="start">
                 <Image :src='getProduct(item.productId).mainImageUrl' />
               </ion-thumbnail>
@@ -98,6 +98,7 @@ import Image from "@/components/Image.vue";
 import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
+import { mapGetters } from "vuex";
 
 export default defineComponent({
   name: "Home",
@@ -131,6 +132,11 @@ export default defineComponent({
         }
       ] as any
     }
+  },
+  computed: {
+    ...mapGetters({
+      deliveryMethod: 'user/getDeliveryMethod'
+    })
   },
   async mounted() {
     await this.getOrder(process.env.VUE_APP_VIEW_SIZE, 0);
@@ -191,19 +197,16 @@ export default defineComponent({
       return this.products[productId] ? this.products[productId] : {}
     },
 
-    async saveShipmentChanges(shipGroup: any) {
+    async saveShippingAddressChanges(shipGroup: any) {
       let resp
       const payload = {
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        // "partyId": shipGroup.carrierPartyId,
-        // "shipmentMethodTypeId": shipGroup.selectedShipmentMethodTypeId,
-        // "newContactMechId": ''
         "contactMechId": shipGroup.shipTo.postalAddress.id,
-        "isEdited": true,
-        // ...(shipGroup.shipTo.postalAddress.id) && {"contactMechId": shipGroup.shipTo.postalAddress.id, "isEdited": true},
-        "shipmentMethod": `STANDARD@${shipGroup.carrierPartyId}`,
+        ...(shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) && { "isEdited": true },
+        "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
+        "facilityId": "WH",
         "toName": `${shipGroup.editedShipmentAddress.firstName} ${shipGroup.editedShipmentAddress.lastName}`,
         "address1": shipGroup.editedShipmentAddress.address1,
         "city": shipGroup.editedShipmentAddress.city,
@@ -213,10 +216,11 @@ export default defineComponent({
       }
 
       try {
-        resp = await OrderService.updateShipGroup(payload);
+        resp = await OrderService.updateShippingAddress(payload);
         console.log(resp);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          // change the UI
+          // add tracking detials
+          showToast(translate("Changes saved"))
         } else {
           showToast(translate("Something went wrong"))
         }
@@ -224,6 +228,38 @@ export default defineComponent({
         console.error(error)
         showToast(translate("Something went wrong"))
       }
+    },
+
+    async saveFacilityChanges(shipGroup: any) {
+      let resp
+      const payload = {
+        "orderId": this.order.id,
+        "shipGroupSeqId": shipGroup.shipGroupSeqId,
+        "contactMechId": shipGroup.shipTo.postalAddress.id,
+        "shipmentMethod": `STOREPICKUP@_NA_@CARRIER`,
+        "contactMechPurposeTypeId": "SHIPPING_LOCATION",
+        // "facilityId": shipGroup.selectedFacilityId,
+        "facilityId": "WH",
+        // "facilityId": "STORE_1"
+      }
+
+      try {
+        resp = await OrderService.updateFacility(payload);
+        console.log(resp);
+        if (resp.status === 200 && !hasError(resp) && resp.data) {
+          // add tracking detials
+          showToast(translate("Changes saved"))
+        } else {
+          showToast(translate("Something went wrong"))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Something went wrong"))
+      }
+    },
+
+    async saveShipmentChanges(shipGroup: any) {
+      shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.saveFacilityChanges(shipGroup) : this.saveShippingAddressChanges(shipGroup);   
     },
 
     updateDeliveryMethod(event: any, shipGroup: string) {

@@ -4,6 +4,7 @@ const getOrder = async (payload: any): Promise <any>  => {
   return api({
     // url: "orders/10707", // perryellis
     url: "orders/10273", // dev-hc and perryellis standard
+    // url: "orders/11430", // dev-hc storepickup
     // url: "orders/10707", // perryellis storepickup
     method: "post",
     data: payload,
@@ -11,7 +12,7 @@ const getOrder = async (payload: any): Promise <any>  => {
   });
 }
 
-const updateShipGroup = async (payload: any): Promise <any>  => {
+const updateShippingAddress = async (payload: any): Promise <any>  => {
   return api({
     url: "service/updateShippingInformationOfShipGroup", 
     method: "post",
@@ -19,9 +20,9 @@ const updateShipGroup = async (payload: any): Promise <any>  => {
   });
 }
 
-const getContactMechId = async (payload: any): Promise <any>  => {
+const updateFacility = async (payload: any): Promise <any>  => {
   return api({
-    url: "service/createPostalAddress", 
+    url: "service/updateOrderItemShipGroup", 
     method: "post",
     data: payload,
   });
@@ -37,7 +38,7 @@ const getAssociatedStates = async (payload: any): Promise <any>  => {
 
 export const OrderService = {
   getOrder,
-  updateShipGroup,
-  getContactMechId,
-  getAssociatedStates
+  updateShippingAddress,
+  getAssociatedStates,
+  updateFacility
 }
