@@ -61,18 +61,20 @@ app.config.globalProperties.$filters = {
     }
     return featureValue;
   },
-  getFeatures(featureHierarchy: any, featureKey: string) {
-    let featuresValue = ''
+  groupFeatures(featureHierarchy: any) {
     if (featureHierarchy) {
-      featureHierarchy.filter((featureItem: any) => featureItem.startsWith(featureKey)).forEach((feature: any) => {
-        const featureSplit = feature ? feature.split('/') : [];
-        const featureValue = featureSplit[2] ? featureSplit[2] : '';
-        featuresValue +=  " " + featureValue;
-      })
+      const features = featureHierarchy.reduce((filteredFeatures: any, feature: any) => {
+        const featureSplit = feature.split('/');
+        if (featureSplit[1] && featureSplit[2]) {
+          filteredFeatures[featureSplit[1]] ? filteredFeatures[featureSplit[1]].push(featureSplit[2]) : filteredFeatures[featureSplit[1]] = [featureSplit[2]]
+        }  
+        return filteredFeatures;
+      }, {});
+      const sortedFeatures = {} as any;
+      Object.keys(features).sort().map((key) => sortedFeatures[key] = features[key].join(', '))
+      return sortedFeatures;
     }
-    // trim removes extra white space from beginning for the first feature
-    return featuresValue.trim();
-  }
+  },
 }
 
 

@@ -24,9 +24,9 @@
               <ion-label slot="start">
                 <p>{{ item.brandName }}</p>
                 <h2>{{ item.name }}</h2>
-                <!-- TODO show all features -->
-                <p>{{ $t("Color") }}: {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/COLOR/') }}</p>
-                <p>{{ $t("Size") }}: {{ $filters.getFeatures(getProduct(item.productId).featureHierarchy, '1/SIZE/') }}</p>
+                <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
+                  <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
+                </p>
               </ion-label>
             </ion-item>
             <!-- TODO -->
@@ -41,7 +41,7 @@
                 <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
               </ion-select>
             </ion-item>
-            <ion-button v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup locations")}}</ion-button>
+            <ion-button v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else>
               <ion-list v-if="shipGroup.editedShipmentAddress">
                 <ion-label>{{ shipGroup.editedShipmentAddress.firstName }} {{ shipGroup.editedShipmentAddress.lastName }}</ion-label>
@@ -59,9 +59,13 @@
               <ion-label>{{ $t("Estimated delivery") }}</ion-label>
               <ion-label slot="end">{{ $t("03/03/2023") }}</ion-label>
             </ion-item> -->
-            <!-- Disabling the buttons if address is not edited or no nearby store is selected -->
-            <ion-button :disabled="!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId" @click="saveChanges(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-            <ion-button :disabled="!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId" @click="resetChanges(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+            <ion-item v-if="shipGroup.trackingNumber">
+              <ion-label>{{ $t('Tracking code') }}</ion-label>
+              <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
+            </ion-item>
+            <!-- Disabling the buttons if address or facility is not added or after the changes are saved-->
+            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || areChangesSaved" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
+            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || areChangesSaved" @click="resetChanges(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
       </div>
@@ -130,7 +134,8 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ] as any
+      ] as any,
+      areChangesSaved: false
     }
   },
   computed: {
@@ -148,6 +153,7 @@ export default defineComponent({
         resp = await OrderService.getOrder(this.$route.params.orderId);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           this.order = resp.data;
+          console.log(this.order)
           let productIds: any = new Set();
           this.order.shipGroup.map((group: any) => {
             group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
@@ -213,7 +219,7 @@ export default defineComponent({
       try {
         resp = await OrderService.updateShippingAddress(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          // TODO add tracking detials
+          this.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Something went wrong"))
@@ -237,8 +243,9 @@ export default defineComponent({
 
       try {
         resp = await OrderService.updateFacility(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data) {
-          // TODO add tracking detials
+        console.log(resp);
+        if (resp.status === 200 && !hasError(resp)) {
+          this.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Something went wrong"))
@@ -304,7 +311,7 @@ export default defineComponent({
       return modal.present();
     },
 
-    async saveChanges(shipGroup: any) {
+    async save(shipGroup: any) {
       const message = this.$t("Are you sure you want to save the changes?");
       const alert = await alertController.create({
         header: this.$t("Save changes"),
@@ -324,6 +331,7 @@ export default defineComponent({
       return alert.present();
     },
 
+    // TODO replace it with cancel option
     async resetChanges(shipGroup: any) {
       const message = this.$t("Are you sure you want to reset the changes?");
       const alert = await alertController.create({
@@ -345,9 +353,6 @@ export default defineComponent({
     },
 
     resetShipmentChanges(shipGroup: any) {
-      // setting null instead of empty object as empty object is considered truthy
-      // and Object.keys(shipGroup.editedShipmentAddress).length check throws error on
-      // initial render as it isn't set.
       shipGroup.editedShipmentAddress = null
       shipGroup.selectedFacilityId = ''
     },

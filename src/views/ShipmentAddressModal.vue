@@ -121,10 +121,10 @@ export default defineComponent({
         const payload = {
           // Currently giving support for states within the same country only
           // TODO: add support for fetching states from other country
-          
-          // Previously countryGeoId was as - 
+
+          // Previously countryGeoId was- 
           // "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
-          // but now the data doesn't source us that, hence, hardcoding for now.
+          // but now the data doesn't source us that, hence, hardcoded
           "countryGeoId": "USA",
           "viewSize": 60
         }
