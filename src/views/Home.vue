@@ -179,7 +179,7 @@ export default defineComponent({
       try {
         const resp = await ProductService.fetchProducts({
           "filters": ['productId: (' + productIdFilter + ')'],
-          "viewSize": process.env.VUE_APP_VIEW_SIZE
+          "viewSize": productIds.length
         })
 
         if (resp.status === 200 && !hasError(resp) && resp.data) {
@@ -265,7 +265,7 @@ export default defineComponent({
 
     updateDeliveryMethod(event: any, shipGroup: any) {
       this.order.shipGroup.map((group: any) => {
-        if (group.shipGroupSeqId === (shipGroup as any).shipGroupSeqId) {
+        if (group.shipGroupSeqId === shipGroup.shipGroupSeqId) {
           group.selectedShipmentMethodTypeId = event.detail.value;
         }
       })

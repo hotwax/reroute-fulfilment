@@ -115,10 +115,9 @@ export default defineComponent({
       try {
         const storeLookupResp = await FacilityService.getStores(payload)
         if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
-          return showToast(translate("Something went wrong while fetching nearby stores"))
-        } else {
-          return storeLookupResp
-        }
+          return [];
+        } 
+        return storeLookupResp.data.response.docs
       } catch (error) {
         console.error(error)
         showToast(translate("Something went wrong while fetching nearby stores"));
@@ -134,10 +133,9 @@ export default defineComponent({
         })
 
         if (shipGroupLocationResp.status !== 200 || hasError(shipGroupLocationResp) || !shipGroupLocationResp.data.response.numFound) {
-          return showToast(translate("Something went wrong while fetching nearby stores"))
-        } else {
-          return shipGroupLocationResp
+          return '';
         }
+        return shipGroupLocationResp.data.response.docs[0].location
       } catch (error) {
         console.error(error)
         showToast(translate("Something went wrong while fetching nearby stores"));
@@ -155,7 +153,7 @@ export default defineComponent({
         });
 
         if (productInventoryResp.status !== 200 || hasError(productInventoryResp) || !productInventoryResp.data.count) {
-          return showToast(translate("Something went wrong while fetching nearby stores"))
+          return [];
         }
         return productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
       } catch (error) {
@@ -166,17 +164,24 @@ export default defineComponent({
 
     async showStores() {
       try {
-        let shipGroupLocationResp: any, storeLookupResp: any;
-        if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && this.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP') {
-          storeLookupResp = await this.getStores()
+        let stores;
+        if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
+          // shipgroup is in brokering queue in this case so we do 
+          // have any facility hence, all the stores are fetched
+          stores = await this.getStores()
         } else {
-          shipGroupLocationResp = await this.getLocation()
-          storeLookupResp = await this.getStores(shipGroupLocationResp.data.response.docs[0].location)
+          const location = await this.getLocation()
+          if (!location) return showToast(translate("Something went wrong while fetching nearby stores"));
+          stores = await this.getStores(location)
         }
-        const facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
+
+        if (!stores?.length) return showToast(translate("Something went wrong while fetching nearby stores"));
+
+        const facilityIds = stores.map((store: any) => store.storeCode)
         const storesWithInventory = await this.checkInventory(facilityIds)
-        
-        storeLookupResp.data.response.docs.map((storeData: any) => {
+
+        if (!storesWithInventory?.length) return showToast(translate("Something went wrong while fetching nearby stores"));
+        stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.find((store: any) => store.facilityId === storeData.storeCode);
           if (inventoryDetails) this.nearbyStores.push({ ...inventoryDetails, distance: storeData.dist });
         });

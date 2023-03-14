@@ -109,9 +109,9 @@ export default defineComponent({
     async updateShipmentAddress() {
       const hasEmptyValues = Object.keys(this.shipmentAddress).some((field: string) => {
         this.shipmentAddress[field] = this.shipmentAddress[field].trim();
-        return this.shipmentAddress[field] === '';
+        return !this.shipmentAddress[field];
       })
-      if (!hasEmptyValues) return showToast(translate("Please fill all the fields"))
+      if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
       this.closeShipmentModal(this.shipmentAddress);
     },
 
