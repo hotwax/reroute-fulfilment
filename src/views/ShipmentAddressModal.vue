@@ -13,19 +13,19 @@
     <ion-list>
       <ion-item>
         <ion-label position="floating">{{ $t("First name") }}</ion-label>
-        <ion-input name="firstName" v-model="shipmentAddress.firstName" id="firstName" type="text" required />
+        <ion-input name="firstName" v-model="shipmentAddress.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Last name") }}</ion-label>
-        <ion-input name="lastName" v-model="shipmentAddress.lastName" id="lastName" type="text" required />
+        <ion-input name="lastName" v-model="shipmentAddress.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Street") }}</ion-label>
-        <ion-input name="street" v-model="shipmentAddress.address1" id="address1" type="text" required />
+        <ion-input name="street" v-model="shipmentAddress.address1" id="address1" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("City") }}</ion-label>
-        <ion-input name="city" v-model="shipmentAddress.city" id="city" type="text" required />
+        <ion-input name="city" v-model="shipmentAddress.city" id="city" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("State") }}</ion-label>
@@ -35,7 +35,7 @@
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Zipcode") }}</ion-label>
-        <ion-input name="zipcode" v-model="shipmentAddress.postalCode" id="postalCode" required />
+        <ion-input name="zipcode" v-model="shipmentAddress.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
@@ -95,8 +95,8 @@ export default defineComponent({
         city: "",
         stateCode: "",
         postalCode: "",
-        country: "USA"
-      },
+        country: this.shipGroup.shipTo.postalAddress.country
+      } as any,
       contactMechId: '',
       states: {} as any
     };
@@ -107,13 +107,14 @@ export default defineComponent({
   },
   methods: {
     async updateShipmentAddress() {
-      if (this.shipmentAddress.firstName !== "" && this.shipmentAddress.lastName !== "" && this.shipmentAddress.address1 !== "" && this.shipmentAddress.city !== "" && this.shipmentAddress.stateCode !== "" && this.shipmentAddress.postalCode !== "") {
-        // manually updating as option for updating country is not given in the form
-        this.shipmentAddress.country = this.shipGroup.shipTo.postalAddress.country
-        this.closeShipmentModal(this.shipmentAddress);
-      } else {
-        showToast(translate("Please fill all the fields"))
+      for (const field in this.shipmentAddress) {
+        // trim() to remove trailing and beginning spaces if any
+        this.shipmentAddress[field] = this.shipmentAddress[field].trim();
+        if (this.shipmentAddress[field] === '') {
+          return showToast(translate("Please fill all the fields"))
+        }
       }
+      this.closeShipmentModal(this.shipmentAddress);
     },
 
     async getAssociatedStates() {
@@ -126,7 +127,7 @@ export default defineComponent({
           // "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
           // but now the data doesn't source us that, hence, hardcoded
           "countryGeoId": "USA",
-          "viewSize": 60
+          "viewSize": process.env.VUE_APP_VIEW_SIZE
         }
         const resp = await OrderService.getAssociatedStates(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data.stateList.length) {

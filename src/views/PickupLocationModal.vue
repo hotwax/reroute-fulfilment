@@ -22,18 +22,18 @@
         </ion-list>
       </ion-item>
     </ion-card>
-    <ion-list v-if="nearbyStores.length" >
+    <ion-list v-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby stores") }}</ion-label>
       </ion-list-header>
-      <ion-item v-for="store of nearbyStores" :key="store.facilityId">
-        <ion-radio-group v-model="facilityId">
+      <ion-radio-group v-model="facilityId">
+        <ion-item v-for="store of nearbyStores" :key="store.facilityId">
           <ion-label>{{ store.facilityName }}</ion-label>
           <!-- Showing store distance in miles -->
           <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
           <ion-radio :value="store.facilityId" slot="end" />
-        </ion-radio-group>
-      </ion-item>
+        </ion-item>
+      </ion-radio-group>
     </ion-list>
     <ion-item v-else lines="none" class="ion-text-center">
       <ion-label>{{ $t("No nearby stores found") }}</ion-label>
@@ -98,46 +98,55 @@ export default defineComponent({
   },
   props: ["shipGroup", "productIds"],
   mounted() {
-    this.getNearbyStores()
+    this.showStores()
   },
   methods: {
-    async getNearbyStores() {
+    async getStores(point?: string) {
+      let payload = {
+        "viewSize": process.env.VUE_APP_VIEW_SIZE,
+        "filters": ["storeType: RETAIL_STORE"]
+      } as any
+
+      if (point) {
+        payload.point = point
+        payload.distance = 50
+      }
+      
       try {
-        let shipGroupLocationResp: any, productInventoryResp: any, storeLookupResp: any, facilityIds;
-        if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && this.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP') {
-          storeLookupResp = await FacilityService.getStores({
-            "viewSize": 60,
-            "filters": ["storeType: RETAIL_STORE"],
-          })
-
-          if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
-            return showToast(translate("Something went wrong while fetching nearby stores"))
-          }
+        const storeLookupResp = await FacilityService.getStores(payload)
+        if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
+          return showToast(translate("Something went wrong while fetching nearby stores"))
         } else {
-          shipGroupLocationResp = await FacilityService.getLocation({
-            "json": {
-              "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
-            }
-          })
-
-          if (shipGroupLocationResp.status !== 200 || hasError(shipGroupLocationResp) || !shipGroupLocationResp.data.response.numFound) {
-            return showToast(translate("Something went wrong while fetching nearby stores"))
-          }
-
-          storeLookupResp = await FacilityService.getStores({
-            "viewSize": 60,
-            "filters": ["storeType: RETAIL_STORE"],
-            "point": shipGroupLocationResp.data.response.docs[0].location,
-            "distance": 50,
-            "fieldsToSelect": ["storeCode", "storeName", "dist"]
-          })
-
-          if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
-            return showToast(translate("Something went wrong while fetching nearby stores"))
-          }
+          return storeLookupResp
         }
-        facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
-        productInventoryResp = await StockService.checkInventory({
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Something went wrong while fetching nearby stores"));
+      }
+    },
+
+    async getLocation() {
+      try {
+        const shipGroupLocationResp = await FacilityService.getLocation({
+          "json": {
+            "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
+          }
+        })
+
+        if (shipGroupLocationResp.status !== 200 || hasError(shipGroupLocationResp) || !shipGroupLocationResp.data.response.numFound) {
+          return showToast(translate("Something went wrong while fetching nearby stores"))
+        } else {
+          return shipGroupLocationResp
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Something went wrong while fetching nearby stores"));
+      }
+    },
+
+    async checkInventory(facilityIds: Array<string>) {
+      try {
+        const productInventoryResp = await StockService.checkInventory({
           "filters": {
             "productId": this.productIds,
             "facilityId": facilityIds
@@ -148,13 +157,29 @@ export default defineComponent({
         if (productInventoryResp.status !== 200 || hasError(productInventoryResp) || !productInventoryResp.data.count) {
           return showToast(translate("Something went wrong while fetching nearby stores"))
         }
-        const storesWithInventory = productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
-        storesWithInventory.map((store: any) => {
-          const storeDetails = storeLookupResp.data.response.docs.find((data: any) => data.storeCode === store.facilityId );
-          if (storeDetails) this.nearbyStores.push({...store, distance: storeDetails.dist});
+        return productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Something went wrong while fetching nearby stores"));
+      }
+    },
+
+    async showStores() {
+      try {
+        let shipGroupLocationResp: any, storeLookupResp: any;
+        if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && this.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP') {
+          storeLookupResp = await this.getStores()
+        } else {
+          shipGroupLocationResp = await this.getLocation()
+          storeLookupResp = await this.getStores(shipGroupLocationResp.data.response.docs[0].location)
+        }
+        const facilityIds = storeLookupResp.data.response.docs.map((store: any) => store.storeCode)
+        const storesWithInventory = await this.checkInventory(facilityIds)
+        
+        storeLookupResp.data.response.docs.map((storeData: any) => {
+          const inventoryDetails = storesWithInventory.find((store: any) => store.facilityId === storeData.storeCode);
+          if (inventoryDetails) this.nearbyStores.push({ ...inventoryDetails, distance: storeData.dist });
         });
-        // sorting in alphabetical order 
-        this.nearbyStores.sort((a: any, b: any) => a.facilityName.localeCompare(b.facilityName))
       } catch (error) {
         console.error(error)
         showToast(translate("Something went wrong while fetching nearby stores"));

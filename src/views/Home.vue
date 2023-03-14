@@ -94,7 +94,7 @@ import {
 } from "@ionic/vue";
 import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
-import { useStore } from "@/store";
+import { mapGetters, useStore } from 'vuex'
 import { OrderService } from "@/services/OrderService";
 import { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
@@ -102,7 +102,6 @@ import Image from "@/components/Image.vue";
 import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
-import { mapGetters } from "vuex";
 
 export default defineComponent({
   name: "Home",
@@ -179,7 +178,8 @@ export default defineComponent({
 
       try {
         const resp = await ProductService.fetchProducts({
-          "filters": ['productId: (' + productIdFilter + ')']
+          "filters": ['productId: (' + productIdFilter + ')'],
+          "viewSize": process.env.VUE_APP_VIEW_SIZE
         })
 
         if (resp.status === 200 && !hasError(resp) && resp.data) {
@@ -203,7 +203,6 @@ export default defineComponent({
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
         "contactMechId": shipGroup.shipTo.postalAddress.id,
-        ...(shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) && { "isEdited": true },
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": "WH",
@@ -213,7 +212,9 @@ export default defineComponent({
         "stateCode": shipGroup.editedShipmentAddress.stateCode,
         "postalCode": shipGroup.editedShipmentAddress.postalCode,
         "country": shipGroup.editedShipmentAddress.country
-      }
+      } as any
+
+      if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) payload.isEdited = true
 
       try {
         resp = await OrderService.updateShippingAddress(payload);
@@ -221,11 +222,11 @@ export default defineComponent({
           this.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
-          showToast(translate("Something went wrong"))
+          showToast(translate("Failed to update the shipping addess"))
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong"))
+        showToast(translate("Failed to update the shipping addess"))
       }
     },
 
@@ -242,16 +243,15 @@ export default defineComponent({
 
       try {
         resp = await OrderService.updateFacility(payload);
-        console.log(resp);
         if (resp.status === 200 && !hasError(resp)) {
           this.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
-          showToast(translate("Something went wrong"))
+          showToast(translate("Failed to update the pickup store"))
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong"))
+        showToast(translate("Failed to update the pickup store"))
       }
     },
 
@@ -259,7 +259,7 @@ export default defineComponent({
       shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.saveFacilityChanges(shipGroup) : this.saveShippingAddressChanges(shipGroup);   
     },
 
-    updateDeliveryMethod(event: any, shipGroup: string) {
+    updateDeliveryMethod(event: any, shipGroup: any) {
       this.order.shipGroup.map((group: any) => {
         if (group.shipGroupSeqId === (shipGroup as any).shipGroupSeqId) {
           group.selectedShipmentMethodTypeId = event.detail.value;
