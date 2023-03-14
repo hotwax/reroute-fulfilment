@@ -107,13 +107,11 @@ export default defineComponent({
   },
   methods: {
     async updateShipmentAddress() {
-      for (const field in this.shipmentAddress) {
-        // trim() to remove trailing and beginning spaces if any
+      const hasEmptyValues = Object.keys(this.shipmentAddress).some((field: string) => {
         this.shipmentAddress[field] = this.shipmentAddress[field].trim();
-        if (this.shipmentAddress[field] === '') {
-          return showToast(translate("Please fill all the fields"))
-        }
-      }
+        return this.shipmentAddress[field] === '';
+      })
+      if (!hasEmptyValues) return showToast(translate("Please fill all the fields"))
       this.closeShipmentModal(this.shipmentAddress);
     },
 

@@ -214,7 +214,11 @@ export default defineComponent({
         "country": shipGroup.editedShipmentAddress.country
       } as any
 
-      if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) payload.isEdited = true
+      if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) {
+        // In case of address edit, we honour the previously selected delivery method
+        payload.shipmentMethod = `${shipGroup.shipmentMethodTypeId}@_NA_`
+        payload.isEdited = true
+      }
 
       try {
         resp = await OrderService.updateShippingAddress(payload);
