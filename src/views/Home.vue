@@ -153,7 +153,6 @@ export default defineComponent({
         resp = await OrderService.getOrder(this.$route.params.orderId);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           this.order = resp.data;
-          console.log(this.order)
           let productIds: any = new Set();
           this.order.shipGroup.map((group: any) => {
             group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;

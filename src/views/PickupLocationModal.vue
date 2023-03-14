@@ -22,19 +22,19 @@
         </ion-list>
       </ion-item>
     </ion-card>
-    <ion-radio-group v-if="nearbyStores.length" v-model="facilityId">
-      <ion-list>
-        <ion-list-header lines="full" color="light">
-          <ion-label>{{ $t("Nearby stores") }}</ion-label>
-        </ion-list-header>
-        <ion-item v-for="store of nearbyStores" :key="store.facilityId">
+    <ion-list v-if="nearbyStores.length" >
+      <ion-list-header lines="full" color="light">
+        <ion-label>{{ $t("Nearby stores") }}</ion-label>
+      </ion-list-header>
+      <ion-item v-for="store of nearbyStores" :key="store.facilityId">
+        <ion-radio-group v-model="facilityId">
           <ion-label>{{ store.facilityName }}</ion-label>
           <!-- Showing store distance in miles -->
           <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
           <ion-radio :value="store.facilityId" slot="end" />
-        </ion-item>
-      </ion-list>
-    </ion-radio-group>
+        </ion-radio-group>
+      </ion-item>
+    </ion-list>
     <ion-item v-else lines="none" class="ion-text-center">
       <ion-label>{{ $t("No nearby stores found") }}</ion-label>
     </ion-item>
