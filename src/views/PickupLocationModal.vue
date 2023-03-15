@@ -120,7 +120,6 @@ export default defineComponent({
         return storeLookupResp.data.response.docs
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching nearby stores"));
       }
     },
 
@@ -138,7 +137,6 @@ export default defineComponent({
         return shipGroupLocationResp.data.response.docs[0].location
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching nearby stores"));
       }
     },
 
@@ -158,7 +156,6 @@ export default defineComponent({
         return productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching nearby stores"));
       }
     },
 
@@ -166,28 +163,28 @@ export default defineComponent({
       try {
         let stores;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-          // shipgroup is in brokering queue in this case so we do 
+          // shipgroup is in brokering queue in this case so we do not
           // have any facility hence, all the stores are fetched
           stores = await this.getStores()
         } else {
           const location = await this.getLocation()
-          if (!location) return showToast(translate("Something went wrong while fetching nearby stores"));
+          if (!location) return showToast(translate("Something went wrong while fetching stores"));
           stores = await this.getStores(location)
         }
 
-        if (!stores?.length) return showToast(translate("Something went wrong while fetching nearby stores"));
+        if (!stores?.length) return showToast(translate("Something went wrong while fetching stores"));
 
         const facilityIds = stores.map((store: any) => store.storeCode)
         const storesWithInventory = await this.checkInventory(facilityIds)
 
-        if (!storesWithInventory?.length) return showToast(translate("Something went wrong while fetching nearby stores"));
+        if (!storesWithInventory?.length) return showToast(translate("Something went wrong while fetching stores"));
         stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.find((store: any) => store.facilityId === storeData.storeCode);
           if (inventoryDetails) this.nearbyStores.push({ ...inventoryDetails, distance: storeData.dist });
         });
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching nearby stores"));
+        showToast(translate("Something went wrong while fetching stores"));
       }
     },
 

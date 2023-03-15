@@ -55,6 +55,7 @@
               </ion-list>
               <ion-button slot="end" @click="updateShipmentAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
+            <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
               <ion-label>{{ $t("Estimated delivery") }}</ion-label>
               <ion-label slot="end">{{ $t("03/03/2023") }}</ion-label>
@@ -133,7 +134,7 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ] as any,
+      ],
       areChangesSaved: false
     }
   },
