@@ -1,20 +1,20 @@
-import api from '@/api';
+import { api } from '@/adapter';
 
 const getStores = async (payload: any): Promise <any>  => {
+  // TODO implement caching
   return api({
     url: "storeLookup", 
     method: "post",
     data: payload,
-    cache: true
   });
 }
 
 const getLocation = async (payload: any): Promise <any>  => {
+  // TODO implement caching
   return api({
     url: "postcodeLookup", 
-    method: "post",
-    data: payload,
-    cache: true
+    method: "get",
+    params: payload,
   });
 }
 

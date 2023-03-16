@@ -1,4 +1,4 @@
-import api from '@/api';
+import { api } from '@/adapter';
 
 const getOrder = async (orderId: string): Promise <any>  => {
   return api({
