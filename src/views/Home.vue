@@ -15,8 +15,7 @@
           </ion-item>
         </ion-card>
         <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
-          <!-- Only show shipGroups having product/items -->
-          <ion-card v-if="shipGroup.items.length">
+          <ion-card v-if="shipGroup.items.length && !shipGroup.isShipmentCancelled">
             <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">
               <ion-thumbnail slot="start">
                 <Image :src='getProduct(item.productId).mainImageUrl' />
@@ -65,13 +64,13 @@
               <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
             </ion-item>
             <!-- Disabling the buttons if address or facility is not added or after the changes are saved-->
-            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || areChangesSaved" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || areChangesSaved" @click="resetChanges(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || shipGroup.areChangesSaved" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
+            <ion-button :disabled="shipGroup.areChangesSaved" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
       </div>
-      <div v-else class="ion-text-center ion-padding-top">
-        <ion-label>{{ $t("Something went wrong while fetching the order details") }}</ion-label>
+      <div v-if="order.statusId == 'ORDER_CANCELLED' || order.isOrderCanacelled" class="ion-text-center ion-padding-top">
+        <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
       </div>
     </ion-content>
   </ion-page>
@@ -134,8 +133,7 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ],
-      areChangesSaved: false
+      ]
     }
   },
   computed: {
@@ -150,24 +148,29 @@ export default defineComponent({
     async getOrder() {
       let resp;
       try {
-        resp = await OrderService.getOrder(this.$route.params.orderId);
+        resp = await OrderService.getOrder(this.$route.params.orderId as string);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           this.order = resp.data;
           let productIds: any = new Set();
+          let isShipmentCancelled = false;
           this.order.shipGroup.map((group: any) => {
             group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
             group.items.map((item: any) => {
               if (item.productId) productIds.add(item.productId);
+              if (item.status == 'ITEM_CANCELLED') isShipmentCancelled = true;
             })
+            group.isShipmentCancelled = isShipmentCancelled;
           })
           this.productIds = [...productIds]
           await this.fetchProducts(this.productIds)
         } else {
+          this.order = {}
           showToast(translate("Order not Found"))
         }
       } catch (error) {
+        this.order = {}
         console.error(error)
-        showToast(translate("Something went wrong"))
+        showToast(translate("Something went wrong while fetching the order details"))
       }
     },
 
@@ -224,7 +227,7 @@ export default defineComponent({
       try {
         resp = await OrderService.updateShippingAddress(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          this.areChangesSaved = true;
+          shipGroup.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Failed to update the shipping addess"))
@@ -249,7 +252,7 @@ export default defineComponent({
       try {
         resp = await OrderService.updateFacility(payload);
         if (resp.status === 200 && !hasError(resp)) {
-          this.areChangesSaved = true;
+          shipGroup.areChangesSaved = true;
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Failed to update the pickup store"))
@@ -335,11 +338,36 @@ export default defineComponent({
       return alert.present();
     },
 
-    // TODO replace it with cancel option
-    async resetChanges(shipGroup: any) {
-      const message = this.$t("Are you sure you want to reset the changes?");
+
+    async cancelShipment(shipGroup: any) {
+      let resp
+      const itemReasonMap = {} as any
+      shipGroup.items.map((item: any) => item.itemSeqId).map((key: string) => itemReasonMap[key] = 'OICR_CHANGE_MIND')
+      const payload = {
+        "orderId": this.order.id,
+        "shipGroupSeqId": shipGroup.shipGroupSeqId,
+        "itemReasonMap": itemReasonMap
+      } as any
+
+      try {
+        resp = await OrderService.cancelOrderItem(payload);
+        if (resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
+          shipGroup.isShipmentCancelled = true;
+          this.order.isOrderCanacelled = true;
+          showToast(translate("Order cancelled successfully"))
+        } else {
+          showToast(translate("Failed to cancel the order"))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Failed to cancel the order"))
+      }
+    },
+
+    async cancel(shipGroup: any) {
+      const message = this.$t("Are you sure you want to cancel the shipment?");
       const alert = await alertController.create({
-        header: this.$t("Reset changes"),
+        header: this.$t("Cancel shipment"),
         message,
         buttons: [
           {
@@ -348,7 +376,7 @@ export default defineComponent({
           {
             text: this.$t("Confirm"),
             handler: () => {
-              this.resetShipmentChanges(shipGroup);
+              this.cancelShipment(shipGroup);
             }
           }
         ],

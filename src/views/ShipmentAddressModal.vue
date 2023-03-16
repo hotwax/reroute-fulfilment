@@ -67,7 +67,7 @@ import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import { translate } from '@/i18n';
 import { hasError, showToast } from '@/utils';
-import { OrderService } from '@/services/OrderService';
+import { UtilityService } from '@/services/UtilityService';
 
 export default defineComponent({
   name: 'ShipmentModal',
@@ -127,7 +127,7 @@ export default defineComponent({
           "countryGeoId": "USA",
           "viewSize": process.env.VUE_APP_VIEW_SIZE
         }
-        const resp = await OrderService.getAssociatedStates(payload);
+        const resp = await UtilityService.getAssociatedStates(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data.stateList.length) {
           this.states = resp.data.stateList.map((state: string) => {
             const stateData = state.split(': ')
