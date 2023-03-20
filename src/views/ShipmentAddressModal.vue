@@ -118,13 +118,7 @@ export default defineComponent({
     async getAssociatedStates() {
       try {
         const payload = {
-          // Currently giving support for states within the same country only
-          // TODO: add support for fetching states from other country
-
-          // Previously countryGeoId was- 
-          // "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
-          // but now the data doesn't source us that, hence, hardcoded
-          "countryGeoId": "USA",
+          "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
           "viewSize": process.env.VUE_APP_VIEW_SIZE
         }
         const resp = await UtilityService.getAssociatedStates(payload);
