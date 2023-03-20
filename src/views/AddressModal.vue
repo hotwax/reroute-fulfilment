@@ -2,7 +2,7 @@
   <ion-header>
     <ion-toolbar>
       <ion-title>{{ $t("Shipment address") }}</ion-title>
-      <ion-buttons slot="end" @click="closeShipmentModal()">
+      <ion-buttons slot="end" @click="close()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
         </ion-button>
@@ -29,7 +29,7 @@
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("State") }}</ion-label>
-        <ion-select interface="popover" :value="shipmentAddress.stateCode"  @ionChange="setState($event)">
+        <ion-select interface="popover" v-model="shipmentAddress.stateCode">
           <ion-select-option v-for="state in states" :key="state.geoId" :value="state.geoId" >{{ state.geoName }}</ion-select-option>
         </ion-select>
       </ion-item>
@@ -39,7 +39,7 @@
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
-      <ion-button @click="updateShipmentAddress()">{{ $t("Save shipping address") }}</ion-button>
+      <ion-button @click="updateAddress()">{{ $t("Save shipping address") }}</ion-button>
     </div>
   </ion-content>
 </template>
@@ -106,13 +106,13 @@ export default defineComponent({
     this.getAssociatedStates()
   },
   methods: {
-    async updateShipmentAddress() {
+    async updateAddress() {
       const hasEmptyValues = Object.keys(this.shipmentAddress).some((field: string) => {
         this.shipmentAddress[field] = this.shipmentAddress[field].trim();
         return !this.shipmentAddress[field];
       })
       if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
-      this.closeShipmentModal(this.shipmentAddress);
+      this.close(this.shipmentAddress);
     },
 
     async getAssociatedStates() {
@@ -136,11 +136,7 @@ export default defineComponent({
       }
     },
 
-    setState(event: any) {
-      this.shipmentAddress.stateCode = event.detail.value;
-    },
-
-    closeShipmentModal(shipmentAddress?: any) {
+    close(shipmentAddress?: any) {
       modalController.dismiss({ dismissed: true }, shipmentAddress);
     },
   },

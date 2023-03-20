@@ -1,7 +1,7 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-buttons slot="end" @click="closeShipmentAddressModal()">
+      <ion-buttons slot="end" @click="close()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
         </ion-button>
@@ -40,7 +40,7 @@
     </ion-item>
     <!-- Only show select button if there are stores to select from -->
     <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button @click="updateShipmentStore()">{{ $t("Select pickup location") }}</ion-button>
+      <ion-button @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
     </div>
   </ion-content>
 </template>
@@ -71,9 +71,10 @@ import { FacilityService } from '@/services/FacilityService';
 import { StockService } from '@/services/StockService';
 import { translate } from '@/i18n';
 import { hasError, showToast } from '@/utils';
+import { UtilityService } from '@/services/UtilityService';
 
 export default defineComponent({
-  name: 'StoreModal',
+  name: 'PickupLocationModal',
   components: {
     IonButton,
     IonButtons,
@@ -96,9 +97,9 @@ export default defineComponent({
       facilityId: ''
     }
   },
-  props: ["shipGroup", "productIds"],
+  props: ["shipGroup"],
   mounted() {
-    this.showStores()
+    this.getPickupStores()
   },
   methods: {
     async getStores(point?: string) {
@@ -109,7 +110,7 @@ export default defineComponent({
 
       if (point) {
         payload.point = point
-        payload.distance = 50
+        payload.distance = process.env.VUE_APP_DEFAULT_STORELOOKUP_DISTANCE ? process.env.VUE_APP_DEFAULT_STORELOOKUP_DISTANCE : 50
       }
       
       try {
@@ -123,9 +124,9 @@ export default defineComponent({
       }
     },
 
-    async getLocation() {
+    async getDeliveryAddressGeoLocation() {
       try {
-        const shipGroupLocationResp = await FacilityService.getLocation({
+        const shipGroupLocationResp = await UtilityService.getGeoLocation({
           "json": {
             "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
           }
@@ -141,10 +142,11 @@ export default defineComponent({
     },
 
     async checkInventory(facilityIds: Array<string>) {
+      const productIds = this.shipGroup.items.map((item: any) => item.productId)
       try {
         const productInventoryResp = await StockService.checkInventory({
           "filters": {
-            "productId": this.productIds,
+            "productId": productIds,
             "facilityId": facilityIds
           },
           "fieldsToSelect": ["atp", "facilityName", "facilityId"],
@@ -159,7 +161,7 @@ export default defineComponent({
       }
     },
 
-    async showStores() {
+    async getPickupStores() {
       try {
         let stores;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
@@ -167,7 +169,7 @@ export default defineComponent({
           // have any facility hence, all the stores are fetched
           stores = await this.getStores()
         } else {
-          const location = await this.getLocation()
+          const location = await this.getDeliveryAddressGeoLocation()
           if (!location) return showToast(translate("Something went wrong while fetching stores"));
           stores = await this.getStores(location)
         }
@@ -188,15 +190,19 @@ export default defineComponent({
       }
     },
 
-    updateShipmentStore() {
+    updateFacility() {
       if (this.facilityId) {
-        this.closeShipmentAddressModal(this.facilityId);
+        if (this.facilityId == this.shipGroup.facilityId) {
+          showToast(translate("Existing facility selected again, please select a different facility"));
+        } else {
+          this.close(this.facilityId);
+        }
       } else {
         showToast(translate("Please select a pickup location"));
       }
     },
 
-    closeShipmentAddressModal(facilityId?: string) {
+    close(facilityId?: string) {
       modalController.dismiss({ dismissed: true }, facilityId);
     }
   },

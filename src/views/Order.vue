@@ -15,8 +15,8 @@
           </ion-item>
         </ion-card>
         <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
-          <ion-card v-if="shipGroup.items.length && !shipGroup.isShipmentCancelled">
-            <ion-item v-for="item of shipGroup.items" :key="item.id" lines="full">
+          <ion-card v-if="shipGroup.items.length && !shipGroup.isCancelled">
+            <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="full">
               <ion-thumbnail slot="start">
                 <Image :src='getProduct(item.productId).mainImageUrl' />
               </ion-thumbnail>
@@ -42,17 +42,17 @@
             </ion-item>
             <ion-button v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else>
-              <ion-list v-if="shipGroup.editedShipmentAddress">
-                <ion-label>{{ shipGroup.editedShipmentAddress.firstName }} {{ shipGroup.editedShipmentAddress.lastName }}</ion-label>
-                <ion-label color="dark">{{ shipGroup.editedShipmentAddress.address1 }} </ion-label>
-                <ion-label color="dark">{{ shipGroup.editedShipmentAddress.city }} {{ shipGroup.editedShipmentAddress.stateCode }} {{ shipGroup.editedShipmentAddress.postalCode }}</ion-label>
+              <ion-list v-if="shipGroup.updatedAddress">
+                <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
+                <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
+                <ion-label color="dark">{{ shipGroup.updatedAddress.city }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
               </ion-list>
               <ion-list v-else>
                 <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-button slot="end" @click="updateShipmentAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+              <ion-button slot="end" @click="updateShippingAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
             <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
@@ -63,13 +63,13 @@
               <ion-label>{{ $t('Tracking code') }}</ion-label>
               <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
             </ion-item>
-            <!-- Disabling the buttons if address or facility is not added or after the changes are saved-->
-            <ion-button :disabled="(!shipGroup.editedShipmentAddress && !shipGroup.selectedFacilityId) || shipGroup.areChangesSaved" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-            <ion-button :disabled="shipGroup.areChangesSaved" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+            <!-- Disabling the buttons if address or facility is not added -->
+            <ion-button :disabled="(!shipGroup.updatedAddress && !shipGroup.selectedFacilityId)" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
+            <ion-button @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
       </div>
-      <div v-if="order.statusId == 'ORDER_CANCELLED' || order.isOrderCanacelled" class="ion-text-center ion-padding-top">
+      <div v-if="order.statusId == 'ORDER_CANCELLED'" class="ion-text-center ion-padding-top">
         <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
       </div>
     </ion-content>
@@ -99,12 +99,12 @@ import { OrderService } from "@/services/OrderService";
 import { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
 import Image from "@/components/Image.vue";
-import ShipmentAddressModal from "@/views/ShipmentAddressModal.vue";
+import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
 
 export default defineComponent({
-  name: "Home",
+  name: "Order",
   components: {
     Image,
     IonButton,
@@ -152,23 +152,21 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp) && resp.data) {
           this.order = resp.data;
           let productIds: any = new Set();
-          let isShipmentCancelled = false;
           this.order.shipGroup.map((group: any) => {
+            let cancelledItemCount = 0;
             group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
             group.items.map((item: any) => {
               if (item.productId) productIds.add(item.productId);
-              if (item.status == 'ITEM_CANCELLED') isShipmentCancelled = true;
+              if (item.status == 'ITEM_CANCELLED') cancelledItemCount++;
             })
-            group.isShipmentCancelled = isShipmentCancelled;
+            if (cancelledItemCount === group.items.length) group.isCancelled = true;
           })
           this.productIds = [...productIds]
           await this.fetchProducts(this.productIds)
         } else {
-          this.order = {}
           showToast(translate("Order not Found"))
         }
       } catch (error) {
-        this.order = {}
         console.error(error)
         showToast(translate("Something went wrong while fetching the order details"))
       }
@@ -201,7 +199,7 @@ export default defineComponent({
       return this.products[productId] ? this.products[productId] : {}
     },
 
-    async saveShippingAddressChanges(shipGroup: any) {
+    async saveShippingAddress(shipGroup: any) {
       let resp
       const payload = {
         "orderId": this.order.id,
@@ -209,13 +207,13 @@ export default defineComponent({
         "contactMechId": shipGroup.shipTo.postalAddress.id,
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
-        "facilityId": "WH",
-        "toName": `${shipGroup.editedShipmentAddress.firstName} ${shipGroup.editedShipmentAddress.lastName}`,
-        "address1": shipGroup.editedShipmentAddress.address1,
-        "city": shipGroup.editedShipmentAddress.city,
-        "stateCode": shipGroup.editedShipmentAddress.stateCode,
-        "postalCode": shipGroup.editedShipmentAddress.postalCode,
-        "country": shipGroup.editedShipmentAddress.country
+        "facilityId": shipGroup.facilityId,
+        "toName": `${shipGroup.updatedAddress.firstName} ${shipGroup.updatedAddress.lastName}`,
+        "address1": shipGroup.updatedAddress.address1,
+        "city": shipGroup.updatedAddress.city,
+        "stateCode": shipGroup.updatedAddress.stateCode,
+        "postalCode": shipGroup.updatedAddress.postalCode,
+        "country": shipGroup.updatedAddress.country
       } as any
 
       if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) {
@@ -227,7 +225,8 @@ export default defineComponent({
       try {
         resp = await OrderService.updateShippingAddress(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data) {
-          shipGroup.areChangesSaved = true;
+          shipGroup.shipTo.postalAddress = shipGroup.updatedAddress
+          shipGroup.updatedAddress = null
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Failed to update the shipping addess"))
@@ -238,7 +237,7 @@ export default defineComponent({
       }
     },
 
-    async saveFacilityChanges(shipGroup: any) {
+    async savePickupFacility(shipGroup: any) {
       let resp
       const payload = {
         "orderId": this.order.id,
@@ -250,9 +249,10 @@ export default defineComponent({
       }
 
       try {
-        resp = await OrderService.updateFacility(payload);
+        resp = await OrderService.updatePickupFacility(payload);
         if (resp.status === 200 && !hasError(resp)) {
-          shipGroup.areChangesSaved = true;
+          shipGroup.facilityId = shipGroup.selectedFacilityId
+          shipGroup.selectedFacilityId = null
           showToast(translate("Changes saved"))
         } else {
           showToast(translate("Failed to update the pickup store"))
@@ -263,24 +263,20 @@ export default defineComponent({
       }
     },
 
-    async saveShipmentChanges(shipGroup: any) {
-      shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.saveFacilityChanges(shipGroup) : this.saveShippingAddressChanges(shipGroup);   
-    },
-
     updateDeliveryMethod(event: any, shipGroup: any) {
-      this.order.shipGroup.map((group: any) => {
+      this.order.shipGroup.find((group: any) => {
         if (group.shipGroupSeqId === shipGroup.shipGroupSeqId) {
-          group.selectedShipmentMethodTypeId = event.detail.value;
+          return group.selectedShipmentMethodTypeId = event.detail.value;
         }
       })
       // Resetting the previous changes on method change
-      this.resetShipmentChanges(shipGroup)
+      this.resetShipGroup(shipGroup)
     },
 
-    async updateShipmentAddress(shipGroup: any) {
+    async updateShippingAddress(shipGroup: any) {
       const modal = await modalController
         .create({
-          component: ShipmentAddressModal,
+          component: AddressModal,
           // Adding backdropDismiss as false because on dismissing the modal through backdrop,
           // backrop.role returns 'backdrop' giving unexpected result
           backdropDismiss: false,
@@ -288,10 +284,10 @@ export default defineComponent({
             shipGroup,
           }
         })
-      modal.onDidDismiss().then((shipmentAddress) => {
-        if (shipmentAddress.role) {
+      modal.onDidDismiss().then((result) => {
+        if (result.role) {
           // role will have the passed data
-          shipGroup.editedShipmentAddress = shipmentAddress.role
+          shipGroup.updatedAddress = result.role
         }
       });
       return modal.present();
@@ -305,14 +301,13 @@ export default defineComponent({
           // backrop.role returns 'backdrop' giving unexpected result
           backdropDismiss: false,
           componentProps: {
-            shipGroup,
-            productIds: this.productIds
+            shipGroup
           }
         })
-      modal.onDidDismiss().then((facilityId) => {
-        if (facilityId.role) {
+      modal.onDidDismiss().then((result) => {
+        if (result.role) {
           // role will have the passed data
-          shipGroup.selectedFacilityId = facilityId.role
+          shipGroup.selectedFacilityId = result.role
         }
       });
       return modal.present();
@@ -330,7 +325,7 @@ export default defineComponent({
           {
             text: this.$t("Confirm"),
             handler: () => {
-              this.saveShipmentChanges(shipGroup);
+              shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.savePickupFacility(shipGroup) : this.saveShippingAddress(shipGroup);   
             }
           }
         ],
@@ -339,10 +334,10 @@ export default defineComponent({
     },
 
 
-    async cancelShipment(shipGroup: any) {
+    async cancelShipGroup(shipGroup: any) {
       let resp
       const itemReasonMap = {} as any
-      shipGroup.items.map((item: any) => item.itemSeqId).map((key: string) => itemReasonMap[key] = 'OICR_CHANGE_MIND')
+      shipGroup.items.map((item: any) => itemReasonMap[item.itemSeqId] = 'OICR_CHANGE_MIND')
       const payload = {
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
@@ -352,8 +347,7 @@ export default defineComponent({
       try {
         resp = await OrderService.cancelOrderItem(payload);
         if (resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
-          shipGroup.isShipmentCancelled = true;
-          this.order.isOrderCanacelled = true;
+          shipGroup.isCancelled = true;
           showToast(translate("Order cancelled successfully"))
         } else {
           showToast(translate("Failed to cancel the order"))
@@ -376,7 +370,7 @@ export default defineComponent({
           {
             text: this.$t("Confirm"),
             handler: () => {
-              this.cancelShipment(shipGroup);
+              this.cancelShipGroup(shipGroup);
             }
           }
         ],
@@ -384,8 +378,8 @@ export default defineComponent({
       return alert.present();
     },
 
-    resetShipmentChanges(shipGroup: any) {
-      shipGroup.editedShipmentAddress = null
+    resetShipGroup(shipGroup: any) {
+      shipGroup.updatedAddress = null
       shipGroup.selectedFacilityId = ''
     },
   },

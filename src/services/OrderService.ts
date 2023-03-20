@@ -16,7 +16,7 @@ const updateShippingAddress = async (payload: any): Promise <any>  => {
   });
 }
 
-const updateFacility = async (payload: any): Promise <any>  => {
+const updatePickupFacility = async (payload: any): Promise <any>  => {
   return api({
     url: "service/updateOrderItemShipGroup", 
     method: "post",
@@ -35,6 +35,6 @@ const cancelOrderItem = async (payload: any): Promise <any>  => {
 export const OrderService = {
   getOrder,
   updateShippingAddress,
-  updateFacility,
+  updatePickupFacility,
   cancelOrderItem
 }

@@ -9,16 +9,6 @@ const getStores = async (payload: any): Promise <any>  => {
   });
 }
 
-const getLocation = async (payload: any): Promise <any>  => {
-  // TODO implement caching
-  return api({
-    url: "postcodeLookup", 
-    method: "get",
-    params: payload,
-  });
-}
-
 export const FacilityService = {
-  getStores,
-  getLocation
+  getStores
 }

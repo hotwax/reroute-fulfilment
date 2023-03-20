@@ -8,6 +8,16 @@ const getAssociatedStates = async (payload: any): Promise <any>  => {
   });
 }
 
+const getGeoLocation = async (payload: any): Promise <any>  => {
+  // TODO implement caching
+  return api({
+    url: "postcodeLookup", 
+    method: "get",
+    params: payload,
+  });
+}
+
 export const UtilityService = {
-  getAssociatedStates
+  getAssociatedStates,
+  getGeoLocation
 }
