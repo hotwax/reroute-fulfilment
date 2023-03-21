@@ -1,7 +1,7 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-title>{{ $t("Shipment address") }}</ion-title>
+      <ion-title>{{ $t("Shipping address") }}</ion-title>
       <ion-buttons slot="end" @click="close()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
@@ -13,29 +13,29 @@
     <ion-list>
       <ion-item>
         <ion-label position="floating">{{ $t("First name") }}</ion-label>
-        <ion-input name="firstName" v-model="shipmentAddress.firstName" id="firstName" type="text"/>
+        <ion-input name="firstName" v-model="address.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Last name") }}</ion-label>
-        <ion-input name="lastName" v-model="shipmentAddress.lastName" id="lastName" type="text"/>
+        <ion-input name="lastName" v-model="address.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Street") }}</ion-label>
-        <ion-input name="street" v-model="shipmentAddress.address1" id="address1" type="text"/>
+        <ion-input name="street" v-model="address.address1" id="address1" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("City") }}</ion-label>
-        <ion-input name="city" v-model="shipmentAddress.city" id="city" type="text"/>
+        <ion-input name="city" v-model="address.city" id="city" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("State") }}</ion-label>
-        <ion-select interface="popover" v-model="shipmentAddress.stateCode">
+        <ion-select interface="popover" v-model="address.stateCode">
           <ion-select-option v-for="state in states" :key="state.geoId" :value="state.geoId" >{{ state.geoName }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
         <ion-label position="floating">{{ $t("Zipcode") }}</ion-label>
-        <ion-input name="zipcode" v-model="shipmentAddress.postalCode" id="postalCode"/>
+        <ion-input name="zipcode" v-model="address.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
@@ -88,7 +88,7 @@ export default defineComponent({
   },
   data() {
     return {
-      shipmentAddress: {
+      address: {
         firstName: "",
         lastName: "",
         address1: "",
@@ -107,12 +107,12 @@ export default defineComponent({
   },
   methods: {
     async updateAddress() {
-      const hasEmptyValues = Object.keys(this.shipmentAddress).some((field: string) => {
-        this.shipmentAddress[field] = this.shipmentAddress[field].trim();
-        return !this.shipmentAddress[field];
+      const hasEmptyValues = Object.keys(this.address).some((field: string) => {
+        this.address[field] = this.address[field].trim();
+        return !this.address[field];
       })
       if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
-      this.close(this.shipmentAddress);
+      this.close(this.address);
     },
 
     async getAssociatedStates() {
@@ -136,8 +136,8 @@ export default defineComponent({
       }
     },
 
-    close(shipmentAddress?: any) {
-      modalController.dismiss({ dismissed: true }, shipmentAddress);
+    close(address?: any) {
+      modalController.dismiss({ dismissed: true }, address);
     },
   },
   setup() {

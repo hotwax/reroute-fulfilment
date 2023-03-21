@@ -4,7 +4,6 @@ const getOrder = async (orderId: string): Promise <any>  => {
   return api({
     url: `orders/${orderId}`,
     method: "get",
-    cache: true
   });
 }
 

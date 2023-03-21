@@ -52,7 +52,7 @@
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-button slot="end" @click="updateShippingAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+              <ion-button slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
             <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
@@ -199,7 +199,7 @@ export default defineComponent({
       return this.products[productId] ? this.products[productId] : {}
     },
 
-    async saveShippingAddress(shipGroup: any) {
+    async updateShippingAddress(shipGroup: any) {
       let resp
       const payload = {
         "orderId": this.order.id,
@@ -237,7 +237,7 @@ export default defineComponent({
       }
     },
 
-    async savePickupFacility(shipGroup: any) {
+    async updatePickupFacility(shipGroup: any) {
       let resp
       const payload = {
         "orderId": this.order.id,
@@ -273,7 +273,7 @@ export default defineComponent({
       this.resetShipGroup(shipGroup)
     },
 
-    async updateShippingAddress(shipGroup: any) {
+    async updateDeliveryAddress(shipGroup: any) {
       const modal = await modalController
         .create({
           component: AddressModal,
@@ -325,7 +325,7 @@ export default defineComponent({
           {
             text: this.$t("Confirm"),
             handler: () => {
-              shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.savePickupFacility(shipGroup) : this.saveShippingAddress(shipGroup);   
+              shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.updatePickupFacility(shipGroup) : this.updateShippingAddress(shipGroup);   
             }
           }
         ],
