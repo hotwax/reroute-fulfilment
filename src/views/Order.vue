@@ -69,7 +69,10 @@
           </ion-card>
         </div>
       </div>
-      <div v-if="order.statusId == 'ORDER_CANCELLED'" class="ion-text-center ion-padding-top">
+      <div v-else class="ion-text-center ion-padding-top">
+        <ion-label>{{ $t("Order not found") }}</ion-label>
+      </div>
+      <div v-if="order.statusId == 'ORDER_CANCELLED' || order.ineligible" class="ion-text-center ion-padding-top">
         <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
       </div>
     </ion-content>
@@ -153,18 +156,25 @@ export default defineComponent({
       let resp;
       try {
         resp = await OrderService.getOrder(this.$route.params.orderId as string);
-        if (resp.status === 200 && !hasError(resp) && resp.data) {
+        // If the API fails, resp.data returns string with spaces, hence, added typeof check
+        if (resp.status === 200 && !hasError(resp) && resp.data && typeof resp.data === 'object') {
           this.order = resp.data;
           let productIds: any = new Set();
-          this.order.shipGroup.map((group: any) => {
-            let cancelledItemCount = 0;
-            group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
-            group.items.map((item: any) => {
-              if (item.productId) productIds.add(item.productId);
-              if (item.status == 'ITEM_CANCELLED') cancelledItemCount++;
-            })
-            if (cancelledItemCount === group.items.length) group.isCancelled = true;
+          let ineligibleShipGroupCount = 0;
+          this.order.shipGroup = this.order.shipGroup.filter((group: any) => {
+            if(group.facilityId === '_NA_') {
+              ineligibleShipGroupCount++;
+              let cancelledItemCount = 0;
+              group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
+              group.items.map((item: any) => {
+                if (item.productId) productIds.add(item.productId);
+                if (item.status == 'ITEM_CANCELLED') cancelledItemCount++;
+              })
+              if (cancelledItemCount === group.items.length) group.isCancelled = true;
+              return group;
+            }
           })
+          if (this.order.shipGroup.length === ineligibleShipGroupCount) this.order.ineligible = true
           this.productIds = [...productIds]
           await this.fetchProducts(this.productIds)
         } else {
