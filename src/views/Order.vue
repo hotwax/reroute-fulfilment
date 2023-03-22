@@ -14,8 +14,8 @@
             <ion-note slot="end">{{ $filters.formatUtcDate(order.orderDate) }}</ion-note>
           </ion-item>
         </ion-card>
-        <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
-          <ion-card v-if="shipGroup.items.length && !shipGroup.isCancelled">
+        <div v-if="order.statusId !== 'ORDER_CANCELLED' && order.shipGroup.length > 0" >
+          <ion-card v-for="(shipGroup, index) of order.shipGroup" :key="index">
             <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="full">
               <ion-thumbnail slot="start">
                 <Image :src='getProduct(item.productId).mainImageUrl' />
@@ -68,12 +68,12 @@
             <ion-button :disabled="!isCancelAllowed" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
+        <div v-else class="ion-text-center ion-padding-top">
+          <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
+        </div>
       </div>
       <div v-else class="ion-text-center ion-padding-top">
         <ion-label>{{ $t("Order not found") }}</ion-label>
-      </div>
-      <div v-if="order.statusId == 'ORDER_CANCELLED' || order.ineligible" class="ion-text-center ion-padding-top">
-        <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
       </div>
     </ion-content>
   </ion-page>
@@ -105,6 +105,7 @@ import Image from "@/components/Image.vue";
 import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
+import emitter from "@/event-bus";
 
 export default defineComponent({
   name: "Order",
@@ -126,7 +127,6 @@ export default defineComponent({
     return {
       order: {} as any,
       products: {} as any,
-      productIds: [] as any,
       deliveryMethods: [
         {
           name: 'Store pickup',
@@ -155,34 +155,27 @@ export default defineComponent({
     async getOrder() {
       let resp;
       try {
+        emitter.emit("presentLoader"); 
         resp = await OrderService.getOrder(this.$route.params.orderId as string);
-        // If the API fails, resp.data returns string with spaces, hence, added typeof check
-        if (resp.status === 200 && !hasError(resp) && resp.data && typeof resp.data === 'object') {
+        if (!hasError(resp)) {
           this.order = resp.data;
-          let productIds: any = new Set();
-          let ineligibleShipGroupCount = 0;
+          const productIds: any = new Set();
           this.order.shipGroup = this.order.shipGroup.filter((group: any) => {
             if(group.facilityId === '_NA_') {
-              ineligibleShipGroupCount++;
-              let cancelledItemCount = 0;
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
-              group.items.map((item: any) => {
-                if (item.productId) productIds.add(item.productId);
-                if (item.status == 'ITEM_CANCELLED') cancelledItemCount++;
+              group.items = group.items.filter((item: any) => {
+                if (item.status == 'ITEM_CANCELLED') return false;
+                productIds.add(item.productId);
+                return true;
               })
-              if (cancelledItemCount === group.items.length) group.isCancelled = true;
-              return group;
+              return group.items.length > 0;
             }
           })
-          if (this.order.shipGroup.length === ineligibleShipGroupCount) this.order.ineligible = true
-          this.productIds = [...productIds]
-          await this.fetchProducts(this.productIds)
-        } else {
-          showToast(translate("Order not Found"))
+          if (productIds.length) await this.fetchProducts([...productIds])
         }
+        emitter.emit("dismissLoader");
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching the order details"))
       }
     },
 
@@ -205,7 +198,6 @@ export default defineComponent({
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong"))
       }
     },
 
@@ -257,7 +249,7 @@ export default defineComponent({
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
         "contactMechId": shipGroup.shipTo.postalAddress.id,
-        "shipmentMethod": `STOREPICKUP@_NA_@CARRIER`,
+        "shipmentMethod": "STOREPICKUP@_NA_@CARRIER", // TODO Check why CARRIER is needed
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": shipGroup.selectedFacilityId,
       }
@@ -278,11 +270,8 @@ export default defineComponent({
     },
 
     updateDeliveryMethod(event: any, shipGroup: any) {
-      this.order.shipGroup.find((group: any) => {
-        if (group.shipGroupSeqId === shipGroup.shipGroupSeqId) {
-          return group.selectedShipmentMethodTypeId = event.detail.value;
-        }
-      })
+      const group = this.order.shipGroup.find((group: any) => group.shipGroupSeqId === shipGroup.shipGroupSeqId);
+      group.selectedShipmentMethodTypeId = event.detail.value;
       // Resetting the previous changes on method change
       this.resetShipGroup(shipGroup)
     },

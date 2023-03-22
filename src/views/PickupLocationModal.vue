@@ -40,7 +40,7 @@
     </ion-item>
     <!-- Only show select button if there are stores to select from -->
     <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
+      <ion-button :disabled="!facilityId || facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
     </div>
   </ion-content>
 </template>
@@ -69,8 +69,7 @@ import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import { FacilityService } from '@/services/FacilityService';
 import { StockService } from '@/services/StockService';
-import { translate } from '@/i18n';
-import { hasError, showToast } from '@/utils';
+import { hasError } from '@/utils';
 import { UtilityService } from '@/services/UtilityService';
 
 export default defineComponent({
@@ -170,36 +169,27 @@ export default defineComponent({
           stores = await this.getStores()
         } else {
           const location = await this.getDeliveryAddressGeoLocation()
-          if (!location) return showToast(translate("Something went wrong while fetching stores"));
+          if (!location) return;
           stores = await this.getStores(location)
         }
 
-        if (!stores?.length) return showToast(translate("Something went wrong while fetching stores"));
+        if (!stores?.length) return;
 
         const facilityIds = stores.map((store: any) => store.storeCode)
         const storesWithInventory = await this.checkInventory(facilityIds)
 
-        if (!storesWithInventory?.length) return showToast(translate("Something went wrong while fetching stores"));
+        if (!storesWithInventory?.length) return;
         stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.find((store: any) => store.facilityId === storeData.storeCode);
           if (inventoryDetails) this.nearbyStores.push({ ...inventoryDetails, distance: storeData.dist });
         });
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong while fetching stores"));
       }
     },
 
     updateFacility() {
-      if (this.facilityId) {
-        if (this.facilityId == this.shipGroup.facilityId) {
-          showToast(translate("Existing facility selected again, please select a different facility"));
-        } else {
-          this.close(this.facilityId);
-        }
-      } else {
-        showToast(translate("Please select a pickup location"));
-      }
+      this.close(this.facilityId);
     },
 
     close(facilityId?: string) {

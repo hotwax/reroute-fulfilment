@@ -127,12 +127,9 @@ export default defineComponent({
             const stateData = state.split(': ')
             return { 'geoName': stateData[0], 'geoId': stateData[1] }
           });
-        } else {
-          showToast(translate("Something went wrong, could not fetch the associated states"))
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Something went wrong, could not fetch the associated states"))
       }
     },
 
