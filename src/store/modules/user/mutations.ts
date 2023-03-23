@@ -8,13 +8,17 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_END_SESSION] (state) {
       state.token = ''
-      state.current = null
+      state.current = {}
+      state.permissions = []
     },
     [types.USER_INFO_UPDATED] (state, payload) {
         state.current = payload
     },
     [types.USER_INSTANCE_URL_UPDATED] (state, payload) {
         state.instanceUrl = payload;
+    },
+    [types.USER_PERMISSIONS_UPDATED] (state, payload) {
+        state.permissions = payload
     }
 }
 export default mutations;

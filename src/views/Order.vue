@@ -36,11 +36,11 @@
             </ion-item> -->
             <ion-item>
               <ion-label>{{ $t('Delivery method') }}</ion-label>
-              <ion-select interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
+              <ion-select :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
                 <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
               </ion-select>
             </ion-item>
-            <ion-button v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE)" v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else>
               <ion-list v-if="shipGroup.updatedAddress">
                 <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
@@ -52,7 +52,7 @@
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-button slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+              <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE)" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
             <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
@@ -65,7 +65,7 @@
             </ion-item>
             <!-- Disabling the buttons if address or facility is not added -->
             <ion-button :disabled="(!shipGroup.updatedAddress && !shipGroup.selectedFacilityId)" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-            <ion-button @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
         <div v-else class="ion-text-center ion-padding-top">
@@ -106,6 +106,7 @@ import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
 import emitter from "@/event-bus";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: "Order",
@@ -150,13 +151,14 @@ export default defineComponent({
   methods: {
     async getOrder() {
       let resp;
+      let order
       try {
         emitter.emit("presentLoader"); 
         resp = await OrderService.getOrder(this.$route.params.orderId as string);
         if (!hasError(resp)) {
-          this.order = resp.data;
+          order = resp.data;
           const productIds: any = new Set();
-          this.order.shipGroup = this.order.shipGroup.filter((group: any) => {
+          order.shipGroup = order.shipGroup.filter((group: any) => {
             if(group.facilityId === '_NA_') {
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
               group.items = group.items.filter((item: any) => {
@@ -168,6 +170,8 @@ export default defineComponent({
             }
           })
           if (productIds.length) await this.fetchProducts([...productIds])
+          await this.store.dispatch("user/getPermissions", this.$route.params.orderId as string);
+          this.order = order;
         }
         emitter.emit("dismissLoader");
       } catch (error) {
@@ -380,12 +384,17 @@ export default defineComponent({
     resetShipGroup(shipGroup: any) {
       shipGroup.updatedAddress = null
       shipGroup.selectedFacilityId = ''
-    },
+    }
   },
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { router, store };
+    return {
+      Actions,
+      hasPermission,
+      router,
+      store
+    };
   }
 });
 </script>

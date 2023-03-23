@@ -31,9 +31,18 @@ const cancelOrderItem = async (payload: any): Promise <any>  => {
   });
 }
 
+const getProductStoreSetting = async (payload: any): Promise<any> => {
+  return api({
+    url: 'getProductStoreSetting',
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrder,
   updateShippingAddress,
   updatePickupFacility,
-  cancelOrderItem
+  cancelOrderItem,
+  getProductStoreSetting
 }

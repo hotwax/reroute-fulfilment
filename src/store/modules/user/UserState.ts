@@ -3,4 +3,5 @@ export default interface UserState {
     current: object | null;
     instanceUrl: string;
     deliveryMethod: string;
+    permissions: any;
 }

@@ -21,6 +21,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getDeliveryMethod (state) {
         return state.deliveryMethod ? state.deliveryMethod : 'STANDARD'
+    },
+    getUserPermissions (state) {
+        return state.permissions;
     }
 }
 export default getters;

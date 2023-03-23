@@ -9,6 +9,8 @@ import moment from 'moment';
 import emitter from '@/event-bus'
 import "moment-timezone";
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { prepareAppPermissions, setPermissions } from '@/authorization'
+import { OrderService } from '@/services/OrderService'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -111,6 +113,21 @@ const actions: ActionTree<UserState, RootState> = {
   setUserInstanceUrl ({ state, commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
     updateInstanceUrl(payload)
+  },
+
+  async getPermissions({ commit }, orderId) {
+    try {
+      const resp = await OrderService.getProductStoreSetting({ orderId })
+      if (resp.status === 200 && resp.data.docs?.length && !hasError(resp)) {
+        const permissions = resp.data.docs.map((permission: any) => permission.settingTypeEnumId)
+        const appPermissions = prepareAppPermissions(permissions);
+        setPermissions(appPermissions);
+        commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+      }
+    } catch (error) {
+      console.error(error)
+      showToast(translate("Something went wrong"))
+    }
   }
 }
 
