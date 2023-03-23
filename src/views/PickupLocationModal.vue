@@ -26,12 +26,12 @@
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby stores") }}</ion-label>
       </ion-list-header>
-      <ion-radio-group v-model="facilityId">
+      <ion-radio-group v-model="selectedFacility">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
           <ion-label>{{ store.facilityName }}</ion-label>
           <!-- Showing store distance in miles -->
           <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
-          <ion-radio :value="store.facilityId" slot="end" />
+          <ion-radio :value="store" slot="end" />
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -40,7 +40,7 @@
     </ion-item>
     <!-- Only show select button if there are stores to select from -->
     <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button :disabled="!facilityId || facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
+      <ion-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
     </div>
   </ion-content>
 </template>
@@ -61,6 +61,7 @@ import {
   IonRadioGroup,
   IonTitle,
   IonToolbar,
+  loadingController,
   modalController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
@@ -92,15 +93,34 @@ export default defineComponent({
   },
   data() {
     return {
+      loader: null as any,
       nearbyStores: [] as any,
-      facilityId: ''
+      facilityId: '',
+      selectedFacility: {}
     }
   },
   props: ["shipGroup"],
-  mounted() {
-    this.getPickupStores()
+  async mounted() {
+    await this.presentLoader()
+    await this.getPickupStores();
+    this.dismissLoader()
+    
   },
   methods: {
+    async presentLoader() {
+      this.loader = await loadingController
+        .create({
+          message: this.$t("Fetching stores."),
+          translucent: true,
+        });
+      await this.loader.present();
+    },
+    dismissLoader() {
+      if (this.loader) {
+        this.loader.dismiss();
+        this.loader = null;
+      }
+    },
     async getStores(point?: string) {
       let payload = {
         "viewSize": process.env.VUE_APP_VIEW_SIZE,
@@ -148,10 +168,10 @@ export default defineComponent({
             "productId": productIds,
             "facilityId": facilityIds
           },
-          "fieldsToSelect": ["atp", "facilityName", "facilityId"],
+          "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
         });
 
-        if (productInventoryResp.status !== 200 || hasError(productInventoryResp) || !productInventoryResp.data.count) {
+        if (hasError(productInventoryResp) || !productInventoryResp.data.count) {
           return [];
         }
         return productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
@@ -179,9 +199,11 @@ export default defineComponent({
         const storesWithInventory = await this.checkInventory(facilityIds)
 
         if (!storesWithInventory?.length) return;
+        const productIds = this.shipGroup.items.map((item: any) => item.productId)
+
         stores.map((storeData: any) => {
-          const inventoryDetails = storesWithInventory.find((store: any) => store.facilityId === storeData.storeCode);
-          if (inventoryDetails) this.nearbyStores.push({ ...inventoryDetails, distance: storeData.dist });
+          const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
+          if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: storeData.dist });
         });
       } catch (error) {
         console.error(error)
@@ -189,11 +211,11 @@ export default defineComponent({
     },
 
     updateFacility() {
-      this.close(this.facilityId);
+      this.close(this.selectedFacility);
     },
 
-    close(facilityId?: string) {
-      modalController.dismiss({ dismissed: true }, facilityId);
+    close(selectedFacility?: any) {
+      modalController.dismiss({ dismissed: true }, selectedFacility);
     }
   },
   setup() {
