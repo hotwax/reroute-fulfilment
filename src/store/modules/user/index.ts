@@ -11,11 +11,7 @@ const userModule: Module<UserState, RootState> = {
       token: '',
       current: null,
       instanceUrl: '',
-      deliveryMethod: '',
-      allowDeliveryMethodUpdate: true,
-      allowDeliveryAddressUpdate: true,
-      allowPickupUpdate: true,
-      allowCancel: true,
+      deliveryMethod: ''
     },
     getters,
     actions,
