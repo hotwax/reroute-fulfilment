@@ -12,30 +12,30 @@
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-label position="floating">{{ $t("First name") }}</ion-label>
-        <ion-input name="firstName" v-model="address.firstName" id="firstName" type="text"/>
+        <ion-label>{{ $t("First name") }}</ion-label>
+        <ion-input name="firstName" slot="end" v-model="address.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Last name") }}</ion-label>
-        <ion-input name="lastName" v-model="address.lastName" id="lastName" type="text"/>
+        <ion-label>{{ $t("Last name") }}</ion-label>
+        <ion-input name="lastName" slot="end" v-model="address.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Street") }}</ion-label>
-        <ion-input name="street" v-model="address.address1" id="address1" type="text"/>
+        <ion-label>{{ $t("Street") }}</ion-label>
+        <ion-input name="street"  slot="end" v-model="address.address1" id="address1" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("City") }}</ion-label>
-        <ion-input name="city" v-model="address.city" id="city" type="text"/>
+        <ion-label>{{ $t("City") }}</ion-label>
+        <ion-input name="city" slot="end" v-model="address.city" id="city" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("State") }}</ion-label>
-        <ion-select interface="popover" v-model="address.stateCode">
+        <ion-select interface="popover" v-model="address.stateProvinceGeoId">
           <ion-select-option v-for="state in states" :key="state.geoId" :value="state.geoId" >{{ state.geoName }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">{{ $t("Zipcode") }}</ion-label>
-        <ion-input name="zipcode" v-model="address.postalCode" id="postalCode"/>
+        <ion-label>{{ $t("Zipcode") }}</ion-label>
+        <ion-input name="zipcode" slot="end" v-model="address.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
@@ -70,7 +70,7 @@ import { hasError, showToast } from '@/utils';
 import { UtilityService } from '@/services/UtilityService';
 
 export default defineComponent({
-  name: 'ShipmentModal',
+  name: 'AddressModal',
   components: {
     IonButton,
     IonButtons,
@@ -93,17 +93,18 @@ export default defineComponent({
         lastName: "",
         address1: "",
         city: "",
-        stateCode: "",
+        stateProvinceGeoId: "",
         postalCode: "",
-        country: this.shipGroup.shipTo.postalAddress.country
+        countryGeoId: ""
       } as any,
       contactMechId: '',
-      states: {} as any
+      states: [] as any
     };
   },
   props: ["shipGroup"],
-  mounted() {
-    this.getAssociatedStates()
+  async mounted() {
+    await this.getAssociatedStates()
+    if (this.shipGroup.shipmentMethodTypeId != 'STOREPICKUP') this.prepareAddress();
   },
   methods: {
     async updateAddress() {
@@ -112,9 +113,24 @@ export default defineComponent({
         return !this.address[field];
       })
       if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
+      const state = this.states.find((state: any) => state.geoId === this.address.stateProvinceGeoId);
+      this.address.stateCode = state.geoCode;
       this.close(this.address);
     },
+    prepareAddress() {
 
+      this.address.address1 = this.shipGroup.shipTo.postalAddress.address1
+      this.address.city = this.shipGroup.shipTo.postalAddress.city
+      this.address.postalCode = this.shipGroup.shipTo.postalAddress.postalCode
+      this.address.stateProvinceGeoId = this.shipGroup.shipTo.postalAddress.stateProvinceGeoId
+    
+    if (this.shipGroup.shipTo.postalAddress.toName) {
+      const toNameSplit = this.shipGroup.shipTo.postalAddress.toName.split(" ");
+      toNameSplit.length > 0 && (this.address.firstName = toNameSplit[0]);
+      toNameSplit.length > 1 && (this.address.lastName = toNameSplit[1]);
+    }
+
+    },
     async getAssociatedStates() {
       try {
         const payload = {
@@ -122,11 +138,9 @@ export default defineComponent({
           "viewSize": process.env.VUE_APP_VIEW_SIZE
         }
         const resp = await UtilityService.getAssociatedStates(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.stateList.length) {
-          this.states = resp.data.stateList.map((state: string) => {
-            const stateData = state.split(': ')
-            return { 'geoName': stateData[0], 'geoId': stateData[1] }
-          });
+        if (!hasError(resp)) {
+          this.states = resp.data.states;
+          this.address.countryGeoId = resp.data.countryGeoId;
         }
       } catch (error) {
         console.error(error)

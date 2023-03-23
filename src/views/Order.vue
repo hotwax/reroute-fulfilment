@@ -40,6 +40,7 @@
                 <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
               </ion-select>
             </ion-item>
+            <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!isDeliveryAddressUpdateAllowed" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
             <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) || shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
               <ion-list>
@@ -55,12 +56,12 @@
                 <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.updatedAddress.city }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-list v-else>
+              <ion-list v-else-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
                 <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) || shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+              <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) || shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
             <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
@@ -193,7 +194,7 @@ export default defineComponent({
             }
           })
           if (productIds.length) await this.fetchProducts([...productIds])
-          await this.store.dispatch("user/getPermissions", this.$route.params.orderId as string);
+          await this.store.dispatch("user/getConfiguration", this.$route.params.orderId as string);
           this.order = order;
           if (productIds.size) await this.fetchProducts([...productIds])
         }
@@ -233,16 +234,16 @@ export default defineComponent({
       const payload = {
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "contactMechId": shipGroup.shipTo.postalAddress.id,
+        "contactMechId": shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? "" :shipGroup.shipTo.postalAddress.id,
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": shipGroup.facilityId,
         "toName": `${shipGroup.updatedAddress.firstName} ${shipGroup.updatedAddress.lastName}`,
         "address1": shipGroup.updatedAddress.address1,
         "city": shipGroup.updatedAddress.city,
-        "stateCode": shipGroup.updatedAddress.stateCode,
+        "stateProvinceGeoId": shipGroup.updatedAddress.stateProvinceGeoId,
         "postalCode": shipGroup.updatedAddress.postalCode,
-        "country": shipGroup.updatedAddress.country
+        "countryGeoId": shipGroup.updatedAddress.countryGeoId
       } as any
 
       if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) {

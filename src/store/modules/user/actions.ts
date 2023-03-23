@@ -115,20 +115,19 @@ const actions: ActionTree<UserState, RootState> = {
     updateInstanceUrl(payload)
   },
 
-  async getPermissions({ commit }, orderId) {
+  async getConfiguration({ commit }, orderId) {
     try {
       const resp = await OrderService.getProductStoreSetting({ orderId })
       if (resp.status === 200 && resp.data.docs?.length && !hasError(resp)) {
-        const permissions = resp.data.docs.map((permission: any) => permission.settingTypeEnumId)
-        const deliveryMethod = permissions.find((permission: string) => permission === 'RF_SHIPPING_METHOD')
+        const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
+        const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
         const appPermissions = prepareAppPermissions(permissions);
         setPermissions(appPermissions);
-        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod);
+        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? deliveryMethod : "STANDARD");
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       }
     } catch (error) {
       console.error(error)
-      showToast(translate("Something went wrong"))
     }
   }
 }

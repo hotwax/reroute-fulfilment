@@ -38,12 +38,11 @@
   "Showing pickup locations near": "Showing pickup locations near",
   "Something went wrong while fetching stores": "Something went wrong while fetching stores",
   "Something went wrong while fetching the order details": "Something went wrong while fetching the order details",
-  "Something went wrong while login. Please contact administrator": "Something went wrong while login. Please contact administrator.",
-  "Sorry, your username or password is incorrect. Please try again.": "Sorry, your username or password is incorrect. Please try again.",  "State": "State",
+  "Settings": "Settings",
+  "State": "State",
   "Street": "Street",
   "Tracking code": "Tracking code",
   "Username": "Username",
-  "You do not have permission to access this page": "You do not have permission to access this page",
   "Your Order": "Your Order",
   "Zipcode": "Zipcode"
 }
