@@ -36,19 +36,19 @@
             </ion-item> -->
             <ion-item>
               <ion-label>{{ $t('Delivery method') }}</ion-label>
-              <ion-select :disabled="!isDeliveryMethodUpdateAllowed" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
+              <ion-select :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
                 <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!isDeliveryAddressUpdateAllowed" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
-            <ion-button :disabled="!isPickupUpdateAllowed" v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) || shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
               <ion-list>
                 <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.selectedFacility.city }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
               </ion-list>
-              <ion-button :disabled="!isPickupUpdateAllowed" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
+              <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) || shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
             </ion-item>
             <ion-item v-else>
               <ion-list v-if="shipGroup.updatedAddress">
@@ -61,7 +61,7 @@
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
               </ion-list>
-              <ion-button v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" :disabled="!isDeliveryAddressUpdateAllowed" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+              <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) || shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
             </ion-item>
             <!-- TODO -->
             <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
@@ -74,7 +74,7 @@
             </ion-item>
             <!-- Disabling the buttons if address or facility is not added -->
             <ion-button :disabled="(!shipGroup.updatedAddress && (!shipGroup.selectedFacility || shipGroup.selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-            <ion-button :disabled="!isCancelAllowed" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+            <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
           </ion-card>
         </div>
         <div v-else class="ion-text-center ion-padding-top">
@@ -115,6 +115,7 @@ import Image from "@/components/Image.vue";
 import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "./PickupLocationModal.vue";
+import { Actions, hasPermission } from '@/authorization'
 
 export default defineComponent({
   name: "Order",
@@ -152,10 +153,6 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       deliveryMethod: 'user/getDeliveryMethod',
-      isDeliveryMethodUpdateAllowed: 'user/isDeliveryAddressUpdateAllowed',
-      isDeliveryAddressUpdateAllowed: 'user/isDeliveryAddressUpdateAllowed',
-      isPickupUpdateAllowed: 'user/isPickupUpdateAllowed',
-      isCancelAllowed: 'user/isCancelAllowed'
     })
   },
   async mounted() {
@@ -179,12 +176,13 @@ export default defineComponent({
     async getOrder() {
       await this.presentLoader()
       let resp;
+      let order
       try {
         resp = await OrderService.getOrder(this.$route.params.orderId as string);
         if (!hasError(resp)) {
-          this.order = resp.data;
+          order = resp.data;
           const productIds: any = new Set();
-          this.order.shipGroup = this.order.shipGroup.filter((group: any) => {
+          order.shipGroup = order.shipGroup.filter((group: any) => {
             if(group.facilityId === '_NA_') {
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
               group.items = group.items.filter((item: any) => {
@@ -195,6 +193,9 @@ export default defineComponent({
               return group.items.length > 0;
             }
           })
+          if (productIds.length) await this.fetchProducts([...productIds])
+          await this.store.dispatch("user/getConfiguration", this.$route.params.orderId as string);
+          this.order = order;
           if (productIds.size) await this.fetchProducts([...productIds])
         }
       } catch (error) {
@@ -381,7 +382,7 @@ export default defineComponent({
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Failed to cancel the order"))
+        showToast(translate("Failed~ to cancel the order"))
       }
       this.getOrder();
     },
@@ -409,12 +410,17 @@ export default defineComponent({
     resetShipGroup(shipGroup: any) {
       shipGroup.updatedAddress = null
       shipGroup.selectedFacility = null
-    },
+    }
   },
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { router, store };
+    return {
+      Actions,
+      hasPermission,
+      router,
+      store
+    };
   }
 });
 </script>

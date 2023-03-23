@@ -22,17 +22,8 @@ const getters: GetterTree <UserState, RootState> = {
     getDeliveryMethod (state) {
         return state.deliveryMethod ? state.deliveryMethod : 'STANDARD'
     },
-    isDeliveryMethodUpdateAllowed (state) {
-        return state.allowDeliveryMethodUpdate;
-    },
-    isDeliveryAddressUpdateAllowed (state) {
-        return state.allowDeliveryAddressUpdate;
-    },
-    isPickupUpdateAllowed (state) {
-        return state.allowPickupUpdate;
-    },
-    isCancelAllowed (state) {
-        return state.allowCancel;
+    getUserPermissions (state) {
+        return state.permissions;
     }
 }
 export default getters;

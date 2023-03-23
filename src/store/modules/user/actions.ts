@@ -9,6 +9,8 @@ import moment from 'moment';
 import emitter from '@/event-bus'
 import "moment-timezone";
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
+import { prepareAppPermissions, setPermissions } from '@/authorization'
+import { OrderService } from '@/services/OrderService'
 
 const actions: ActionTree<UserState, RootState> = {
 
@@ -108,9 +110,25 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   // Set User Instance Url
-  setUserInstanceUrl ({ state, commit }, payload){
+  setUserInstanceUrl ({ commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
     updateInstanceUrl(payload)
+  },
+
+  async getConfiguration({ commit }, orderId) {
+    try {
+      const resp = await OrderService.getProductStoreSetting({ orderId })
+      if (!hasError(resp)) {
+        const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
+        const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
+        const appPermissions = prepareAppPermissions(permissions);
+        setPermissions(appPermissions);
+        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? deliveryMethod : "STANDARD");
+        commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+      }
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
 
