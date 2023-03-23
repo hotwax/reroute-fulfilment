@@ -158,9 +158,7 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.presentLoader()
     await this.getOrder();
-    this.dismissLoader()
   },
   methods: {
     async presentLoader() {
@@ -178,6 +176,7 @@ export default defineComponent({
       }
     },
     async getOrder() {
+      await this.presentLoader()
       let resp;
       try {
         resp = await OrderService.getOrder(this.$route.params.orderId as string);
@@ -200,8 +199,8 @@ export default defineComponent({
       } catch (error) {
         console.error(error)
       }
+      this.dismissLoader()
     },
-
     async fetchProducts(productIds: any) {
       const productIdFilter = productIds.reduce((filter: string, productId: any) => {
         if (filter !== '') filter += ' OR '
@@ -264,6 +263,7 @@ export default defineComponent({
         console.error(error)
         showToast(translate("Failed to update the shipping addess"))
       }
+      this.getOrder();
     },
 
     async updatePickupFacility(shipGroup: any) {
@@ -289,6 +289,7 @@ export default defineComponent({
         console.error(error)
         showToast(translate("Failed to update the pickup store"))
       }
+      this.getOrder();
     },
 
     updateDeliveryMethod(event: any, shipGroup: any) {
@@ -381,6 +382,7 @@ export default defineComponent({
         console.error(error)
         showToast(translate("Failed to cancel the order"))
       }
+      this.getOrder();
     },
 
     async cancel(shipGroup: any) {
@@ -390,10 +392,10 @@ export default defineComponent({
         message,
         buttons: [
           {
-            text: this.$t("Cancel"),
+            text: this.$t("Don't Cancel"),
           },
           {
-            text: this.$t("Confirm"),
+            text: this.$t("Cancel"),
             handler: () => {
               this.cancelShipGroup(shipGroup);
             }
