@@ -110,7 +110,7 @@ const actions: ActionTree<UserState, RootState> = {
   },
 
   // Set User Instance Url
-  setUserInstanceUrl ({ state, commit }, payload){
+  setUserInstanceUrl ({ commit }, payload){
     commit(types.USER_INSTANCE_URL_UPDATED, payload)
     updateInstanceUrl(payload)
   },
@@ -120,8 +120,10 @@ const actions: ActionTree<UserState, RootState> = {
       const resp = await OrderService.getProductStoreSetting({ orderId })
       if (resp.status === 200 && resp.data.docs?.length && !hasError(resp)) {
         const permissions = resp.data.docs.map((permission: any) => permission.settingTypeEnumId)
+        const deliveryMethod = permissions.find((permission: string) => permission === 'RF_SHIPPING_METHOD')
         const appPermissions = prepareAppPermissions(permissions);
         setPermissions(appPermissions);
+        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod);
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
       }
     } catch (error) {

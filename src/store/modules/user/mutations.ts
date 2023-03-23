@@ -19,6 +19,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_PERMISSIONS_UPDATED] (state, payload) {
         state.permissions = payload
+    },
+    [types.USER_DELIVERY_METHOD_UPDATED] (state, payload) {
+        state.deliveryMethod = payload
     }
 }
 export default mutations;
