@@ -118,7 +118,7 @@ const actions: ActionTree<UserState, RootState> = {
   async getConfiguration({ commit }, orderId) {
     try {
       const resp = await OrderService.getProductStoreSetting({ orderId })
-      if (resp.status === 200 && resp.data.docs?.length && !hasError(resp)) {
+      if (!hasError(resp)) {
         const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
         const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
         const appPermissions = prepareAppPermissions(permissions);
