@@ -1,8 +1,8 @@
 {
-  "name": "ionic-sdk",
-  "version": "0.0.1",
+  "name": "reroute-fulfillment",
+  "version": "1.0.0",
   "private": true,
-  "description": "An Ionic project",
+  "description": "Reroute Fulfillment",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
