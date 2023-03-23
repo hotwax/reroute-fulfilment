@@ -17,6 +17,10 @@
             <ion-label position="fixed">{{ $t("Password") }}</ion-label>
             <ion-input name="password" v-model="password" id="password" type="password" required />
           </ion-item>
+          <ion-item lines="none">
+            <ion-label position="fixed">{{ $t("Order ID") }}</ion-label>
+            <ion-input name="password" v-model="orderId" id="orderId" type="text" required />
+          </ion-item>
 
           <div class="ion-padding">
             <ion-button type="submit" color="primary" fill="outline" expand="block">{{ $t("Login") }}</ion-button>
@@ -57,6 +61,7 @@ export default defineComponent({
       username: "",
       password: "",
       instanceUrl: "",
+      orderId: "",
       baseURL: process.env.VUE_APP_BASE_URL
     };
   },
@@ -77,7 +82,7 @@ export default defineComponent({
         if (data.token) {
           this.username = ''
           this.password = ''
-          this.$router.push('/')
+          this.$router.push(`/orders/${this.orderId}`)
         }
       })
     }

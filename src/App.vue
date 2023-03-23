@@ -9,7 +9,9 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { loadingController } from '@ionic/vue';
 import emitter from "@/event-bus"
-
+import { initialise, resetConfig } from '@/adapter'
+import { useRouter } from 'vue-router';
+import { mapGetters, useStore } from 'vuex';
 
 export default defineComponent({
   name: 'App',
@@ -19,8 +21,15 @@ export default defineComponent({
   },
   data() {
     return {
-      loader: null as any
+      loader: null as any,
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0
     }
+  },
+  computed: {
+    ...mapGetters({
+      userToken: 'user/getUserToken',
+      instanceUrl: 'user/getInstanceUrl'
+    })
   },
   methods: {
     async presentLoader() {
@@ -36,7 +45,27 @@ export default defineComponent({
       if (this.loader) {
         this.loader.dismiss();
       }
+    },
+    async unauthorized() {
+      this.store.dispatch("user/logout");
+      this.router.push("/login")
     }
+  },
+  created() {
+    initialise({
+      token: this.userToken,
+      instanceUrl: this.instanceUrl,
+      cacheMaxAge: this.maxAge,
+      events: {
+        unauthorised: this.unauthorized,
+        responseErrror: () => {
+          setTimeout(() => this.dismissLoader(), 100);
+        },
+        queueTask: (payload: any) => {
+          emitter.emit("queueTask", payload);
+        }
+      }
+    })
   },
   mounted() {
     emitter.on('presentLoader', this.presentLoader);
@@ -45,6 +74,15 @@ export default defineComponent({
   unmounted() {
     emitter.off('presentLoader', this.presentLoader);
     emitter.off('dismissLoader', this.dismissLoader);
+    resetConfig()
+  },
+  setup(){
+    const store = useStore();
+    const router = useRouter();
+    return {
+      store,
+      router
+    }
   },
 });
 </script>

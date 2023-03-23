@@ -18,6 +18,21 @@ const getters: GetterTree <UserState, RootState> = {
     getInstanceUrl (state) {
         const baseUrl = process.env.VUE_APP_BASE_URL;
         return baseUrl ? baseUrl : state.instanceUrl;
+    },
+    getDeliveryMethod (state) {
+        return state.deliveryMethod ? state.deliveryMethod : 'STANDARD'
+    },
+    isDeliveryMethodUpdateAllowed (state) {
+        return state.allowDeliveryMethodUpdate;
+    },
+    isDeliveryAddressUpdateAllowed (state) {
+        return state.allowDeliveryAddressUpdate;
+    },
+    isPickupUpdateAllowed (state) {
+        return state.allowPickupUpdate;
+    },
+    isCancelAllowed (state) {
+        return state.allowCancel;
     }
 }
 export default getters;
