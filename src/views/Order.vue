@@ -40,8 +40,8 @@
                 <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
               </ion-select>
             </ion-item>
-            <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!isDeliveryAddressUpdateAllowed" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
-            <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) || shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
+            <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) || shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
+            <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) || shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline">{{ $t("Select pickup location")}}</ion-button>
             <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
               <ion-list>
                 <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
