@@ -13,19 +13,19 @@
     <ion-list>
       <ion-item>
         <ion-label>{{ $t("First name") }}</ion-label>
-        <ion-input name="firstName" slot="end" v-model="address.firstName" id="firstName" type="text"/>
+        <ion-input class="ion-text-right" name="firstName" slot="end" v-model="address.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Last name") }}</ion-label>
-        <ion-input name="lastName" slot="end" v-model="address.lastName" id="lastName" type="text"/>
+        <ion-input class="ion-text-right" name="lastName" slot="end" v-model="address.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Street") }}</ion-label>
-        <ion-input name="street"  slot="end" v-model="address.address1" id="address1" type="text"/>
+        <ion-input class="ion-text-right" name="street"  slot="end" v-model="address.address1" id="address1" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("City") }}</ion-label>
-        <ion-input name="city" slot="end" v-model="address.city" id="city" type="text"/>
+        <ion-input class="ion-text-right" name="city" slot="end" v-model="address.city" id="city" type="text"/>
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("State") }}</ion-label>
@@ -35,7 +35,7 @@
       </ion-item>
       <ion-item>
         <ion-label>{{ $t("Zipcode") }}</ion-label>
-        <ion-input name="zipcode" slot="end" v-model="address.postalCode" id="postalCode"/>
+        <ion-input class="ion-text-right" name="zipcode" slot="end" v-model="address.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
