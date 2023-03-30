@@ -115,9 +115,15 @@ const actions: ActionTree<UserState, RootState> = {
     updateInstanceUrl(payload)
   },
 
-  async getConfiguration({ commit }, orderId) {
+  async getConfiguration({ commit }, productStoreId) {
     try {
-      const resp = await OrderService.getProductStoreSetting({ orderId })
+      const resp = await OrderService.getProductStoreSetting({
+        inputFields: {
+          productStoreId,
+          "settingTypeEnumId": ["CUST_DLVRMTHD_UPDATE", "CUST_DLVRADR_UPDATE", "CUST_PCKUP_UPDATE", "CUST_ALLOW_CNCL", "RF_SHIPPING_METHOD"],
+          "settingTypeEnumId_op": "in"
+        }
+      })
       if (!hasError(resp)) {
         const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
         const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
