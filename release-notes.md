@@ -1,3 +1,11 @@
+# Release 1.0.2
+## What's Changed
+* Fixed: When delivery method is changed to store pickup, select pickup location does not get enabled (#56) by @adityasharma7 in https://github.com/hotwax/reroute-fulfilment/pull/57
+* Fixed: Pass specific configId and product storeId for getting configuration (#58) by @adityasharma7 in https://github.com/hotwax/reroute-fulfilment/pull/59
+
+
+**Full Changelog**: https://github.com/hotwax/reroute-fulfilment/compare/v1.0.1...v1.0.2
+
 # Release 1.0.1
 
 ## What's Changed
