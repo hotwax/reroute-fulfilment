@@ -194,7 +194,7 @@ export default defineComponent({
             }
           })
           if (productIds.length) await this.fetchProducts([...productIds])
-          await this.store.dispatch("user/getConfiguration", this.$route.params.orderId as string);
+          await this.store.dispatch("user/getConfiguration", order.productStoreId);
           this.order = order;
           if (productIds.size) await this.fetchProducts([...productIds])
         }
