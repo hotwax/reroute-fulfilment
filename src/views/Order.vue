@@ -11,7 +11,7 @@
               {{ order.customerName }}
               <p>{{ order.id }}</p>
             </ion-label>
-            <ion-note slot="end">{{ $filters.formatUtcDate(order.orderDate) }}</ion-note>
+            <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
           </ion-item>
         </ion-card>
         <div v-if="order.statusId !== 'ORDER_CANCELLED' && order.shipGroup.length > 0" >
@@ -114,8 +114,9 @@ import { hasError, showToast } from "@/utils";
 import Image from "@/components/Image.vue";
 import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
-import PickupLocationModal from "./PickupLocationModal.vue";
+import PickupLocationModal from "@/views/PickupLocationModal.vue";
 import { Actions, hasPermission } from '@/authorization'
+import { initialise } from '@/adapter'
 
 export default defineComponent({
   name: "Order",
@@ -136,6 +137,7 @@ export default defineComponent({
   data() {
     return {
       loader: null as any,
+      maxAge: process.env.VUE_APP_CACHE_MAX_AGE ? parseInt(process.env.VUE_APP_CACHE_MAX_AGE) : 0,
       order: {} as any,
       products: {} as any,
       deliveryMethods: [
@@ -156,7 +158,23 @@ export default defineComponent({
     })
   },
   async mounted() {
-    await this.getOrder();
+    if (Object.keys(this.$route.query).length > 0) {
+      if(!this.$route.query.oms || !this.$route.query.token) {
+        // invalid request
+        return;
+      }
+      initialise({
+        token: this.$route.query.token,
+        instanceUrl: `${this.$route.query.oms}/api/`,
+        cacheMaxAge: this.maxAge,
+        events: {
+          responseErrror: () => {
+            setTimeout(() => this.dismissLoader(), 100);
+          }
+        }
+      })
+      await this.getOrder();
+    }
   },
   methods: {
     async presentLoader() {
@@ -178,7 +196,7 @@ export default defineComponent({
       let resp;
       let order
       try {
-        resp = await OrderService.getOrder(this.$route.params.orderId as string);
+        resp = await OrderService.getOrder();
         if (!hasError(resp)) {
           order = resp.data;
           const productIds: any = new Set();
