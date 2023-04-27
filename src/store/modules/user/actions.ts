@@ -95,7 +95,6 @@ const actions: ActionTree<UserState, RootState> = {
       commit(types.USER_INFO_UPDATED, resp.data);
     }
   },
-  
   /**
    * Update user timeZone
    */

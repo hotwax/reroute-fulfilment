@@ -1,8 +1,8 @@
 import { api } from '@/adapter';
 
-const getOrder = async (orderId: string): Promise <any>  => {
+const getOrder = async (): Promise <any>  => {
   return api({
-    url: `orders/${orderId}`,
+    url: "orders",
     method: "get",
   });
 }
