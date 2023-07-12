@@ -18,7 +18,7 @@
           <ion-card v-for="(shipGroup, index) of order.shipGroup" :key="index">
             <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="full">
               <ion-thumbnail slot="start">
-                <ShopifyImg :src='getProduct(item.productId).mainImageUrl' />
+                <ShopifyImg :src='getProduct(item.productId).mainImageUrl' size="small"/>
               </ion-thumbnail>
               <ion-label slot="start">
                 <p>{{ item.brandName }}</p>
@@ -111,7 +111,7 @@ import { mapGetters, useStore } from 'vuex'
 import { OrderService } from "@/services/OrderService";
 import { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
-import { ShopifyImg } from "dxp-components"; 
+import { ShopifyImg } from "@hotwax/dxp-components"; 
 import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "@/views/PickupLocationModal.vue";
