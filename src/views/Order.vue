@@ -168,7 +168,7 @@ export default defineComponent({
         instanceUrl: `${this.$route.query.oms}/api/`,
         cacheMaxAge: this.maxAge,
         events: {
-          responseErrror: () => {
+          responseError: () => {
             setTimeout(() => this.dismissLoader(), 100);
           }
         }
