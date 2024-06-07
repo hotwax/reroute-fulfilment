@@ -333,7 +333,6 @@ export default defineComponent({
         if (result.role) {
           // role will have the passed data
           shipGroup.updatedAddress = result.role
-          console.log('shipGroup.updatedAddress', shipGroup.updatedAddress)
         }
       });
       return modal.present();
