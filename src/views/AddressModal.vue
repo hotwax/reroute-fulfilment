@@ -110,18 +110,21 @@ export default defineComponent({
       this.close(this.address);
     },
     prepareAddress() {
+      if(this.shipGroup?.updatedAddress) {
+        this.address = this.shipGroup.updatedAddress
+        return;
+      }
 
       this.address.address1 = this.shipGroup.shipTo.postalAddress.address1
       this.address.city = this.shipGroup.shipTo.postalAddress.city
       this.address.postalCode = this.shipGroup.shipTo.postalAddress.postalCode
       this.address.stateProvinceGeoId = this.shipGroup.shipTo.postalAddress.stateProvinceGeoId
     
-    if (this.shipGroup.shipTo.postalAddress.toName) {
-      const toNameSplit = this.shipGroup.shipTo.postalAddress.toName.split(" ");
-      toNameSplit.length > 0 && (this.address.firstName = toNameSplit[0]);
-      toNameSplit.length > 1 && (this.address.lastName = toNameSplit[1]);
-    }
-
+      if (this.shipGroup.shipTo.postalAddress.toName) {
+        const toNameSplit = this.shipGroup.shipTo.postalAddress.toName.split(" ");
+        toNameSplit.length > 0 && (this.address.firstName = toNameSplit[0]);
+        toNameSplit.length > 1 && (this.address.lastName = toNameSplit[1]);
+      }
     },
     async getAssociatedStates() {
       try {
