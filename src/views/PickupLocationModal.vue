@@ -28,10 +28,11 @@
       </ion-list-header>
       <ion-radio-group v-model="selectedFacility">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
-          <ion-label>{{ store.facilityName }}</ion-label>
-          <!-- Showing store distance in miles -->
-          <ion-label v-if="store.distance" slot="end">{{ store.distance }} {{ $t("mi") }}</ion-label>
-          <ion-radio :value="store" slot="end" />
+          <ion-radio :value="store">
+              <ion-label>{{ store.facilityName }}</ion-label>
+              <!-- Showing store distance in miles -->
+              <ion-label v-if="store.distance">{{ store.distance }} {{ $t("mi") }}</ion-label>
+          </ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -225,3 +226,12 @@ export default defineComponent({
   }
 });
 </script>
+
+<style scoped>
+/* Styling to add the facility name and its display side by side as ion-radio label */
+ion-radio::part(label) {
+  display: flex;
+  justify-content: space-between;
+  width: 100%
+}
+</style>
