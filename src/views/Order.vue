@@ -148,7 +148,8 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ]
+      ],
+      token: ""
     }
   },
   computed: {
@@ -162,6 +163,7 @@ export default defineComponent({
         // invalid request
         return;
       }
+      this.token = this.$route.query.token as any
       initialise({
         token: this.$route.query.token,
         instanceUrl: `${this.$route.query.oms}/api/`,
@@ -194,10 +196,14 @@ export default defineComponent({
       await this.presentLoader()
       let resp;
       let order
+      if(!this.token) {
+        return;
+      }
+
       try {
-        resp = await OrderService.getOrder();
-        if (!hasError(resp)) {
-          order = resp.data;
+        resp = await OrderService.getOrder(this.token);
+        if (!hasError(resp) && resp.data.order) {
+          order = resp.data.order;
           const productIds: any = new Set();
           order.shipGroup = order.shipGroup.filter((group: any) => {
             if(group.facilityId === '_NA_') {
@@ -260,7 +266,8 @@ export default defineComponent({
         "city": shipGroup.updatedAddress.city,
         "stateProvinceGeoId": shipGroup.updatedAddress.stateProvinceGeoId,
         "postalCode": shipGroup.updatedAddress.postalCode,
-        "countryGeoId": shipGroup.updatedAddress.countryGeoId
+        "countryGeoId": shipGroup.updatedAddress.countryGeoId,
+        "token": this.token
       } as any
 
       if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) {
@@ -294,6 +301,7 @@ export default defineComponent({
         "shipmentMethod": "STOREPICKUP@_NA_@CARRIER", // TODO Check why CARRIER is needed
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": shipGroup.selectedFacility.facilityId,
+        "token": this.token
       }
 
       try {
@@ -386,7 +394,8 @@ export default defineComponent({
       const payload = {
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "itemReasonMap": itemReasonMap
+        "itemReasonMap": itemReasonMap,
+        "token": this.token
       } as any
 
       try {

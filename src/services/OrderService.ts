@@ -1,31 +1,34 @@
 import { api } from '@/adapter';
 
-const getOrder = async (): Promise <any>  => {
+const getOrder = async (token: string): Promise <any>  => {
   return api({
-    url: "orders",
-    method: "get",
+    url: "getRerouteOrder",
+    method: "POST",
+    data: {
+      token
+    }
   });
 }
 
 const updateShippingAddress = async (payload: any): Promise <any>  => {
   return api({
-    url: "service/updateShippingInformationOfShipGroup", 
+    url: "updateShippingAddressRerouteOrder",
     method: "post",
-    data: payload,
+    data: payload
   });
 }
 
 const updatePickupFacility = async (payload: any): Promise <any>  => {
   return api({
-    url: "service/updateOrderItemShipGroup", 
+    url: "updatePickupFacility",
     method: "post",
-    data: payload,
+    data: payload
   });
 }
 
 const cancelOrderItem = async (payload: any): Promise <any>  => {
   return api({
-    url: 'cancelOrderItem',
+    url: "cancelRerouteOrderItem",
     method: "post",
     data: payload
   });
