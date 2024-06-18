@@ -200,7 +200,7 @@ export default defineComponent({
           order = resp.data;
           const productIds: any = new Set();
           order.shipGroup = order.shipGroup.filter((group: any) => {
-            if(group.facilityId === '_NA_') {
+            if(group.facilityId === 'PICKUP_REJECTED') {
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
               group.items = group.items.filter((item: any) => {
                 if (item.status == 'ITEM_CANCELLED') return false;
