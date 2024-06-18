@@ -2,7 +2,6 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <main>
-
         <div v-if="Object.keys(order).length">
           <ion-item class="ion-text-center" lines="none">
             <h1>{{ $t("Your Order") }}</h1>
