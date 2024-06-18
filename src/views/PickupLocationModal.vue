@@ -18,7 +18,7 @@
         <ion-list>
           <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
           <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
+          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
         </ion-list>
       </ion-item>
     </ion-card>
