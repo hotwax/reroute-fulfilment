@@ -52,7 +52,8 @@ import {
   IonSelectOption,
   IonTitle, 
   IonToolbar, 
-  modalController
+  modalController,
+  loadingController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import { closeOutline } from 'ionicons/icons';
@@ -90,13 +91,16 @@ export default defineComponent({
         countryGeoId: ""
       } as any,
       contactMechId: '',
-      states: [] as any
+      states: [] as any,
+      loader: null as any
     };
   },
   props: ["shipGroup", "token"],
   async mounted() {
+    this.presentLoader()
     await this.getAssociatedStates()
     if (this.shipGroup.shipmentMethodTypeId != 'STOREPICKUP') this.prepareAddress();
+    this.dismissLoader()
   },
   methods: {
     async updateAddress() {
@@ -106,7 +110,9 @@ export default defineComponent({
       })
       if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
       const state = this.states.find((state: any) => state.geoId === this.address.stateProvinceGeoId);
-      this.address.stateCode = state.geoCode;
+      // In some cases, we get a stateProvinceGeoId that does not exist in data, thus state is not displayed on the UI but originally the field has information thus toast of empty field is not displayed
+      // thus added a check that if the geoCode is not found in the states fetched from the server, do not stop the address update process and pass the same state that was previously in the address.
+      this.address.stateCode = state?.geoCode || this.address.stateProvinceGeoId;
       this.close(this.address);
     },
     prepareAddress() {
@@ -142,6 +148,19 @@ export default defineComponent({
 
     close(address?: any) {
       modalController.dismiss({ dismissed: true }, address);
+    },
+    async presentLoader() {
+      this.loader = await loadingController
+        .create({
+          message: this.$t("Fetching address")
+        });
+      await this.loader.present();
+    },
+    dismissLoader() {
+      if (this.loader) {
+        this.loader.dismiss();
+        this.loader = null;
+      }
     },
   },
   setup() {

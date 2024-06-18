@@ -20,6 +20,7 @@
   "Failed to cancel the order": "Failed to cancel the order",
   "Failed to update the pickup store": "Failed to update the pickup store",
   "Failed to update the shipping addess": "Failed to update the shipping addess",
+  "Fetching address": "Fetching address",
   "Last name": "Last name",
   "Login": "Login",
   "Logout": "Logout",
