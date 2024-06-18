@@ -4,13 +4,16 @@ import Order from "@/views/Order.vue"
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
-    redirect: "/order",
+    path: "/order/:token",
+    name: "Order",
+    component: Order,
+    props: true
   },
   {
-    path: "/order",
+    path: '/:token',  // Added this route as when using redirect we can't define props as true and thus the redirect fails
     name: "Order",
-    component: Order
+    component: Order,
+    props: true
   }
 ]
 
