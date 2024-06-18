@@ -93,7 +93,7 @@ export default defineComponent({
       states: [] as any
     };
   },
-  props: ["shipGroup"],
+  props: ["shipGroup", "token"],
   async mounted() {
     await this.getAssociatedStates()
     if (this.shipGroup.shipmentMethodTypeId != 'STOREPICKUP') this.prepareAddress();
@@ -126,6 +126,7 @@ export default defineComponent({
     async getAssociatedStates() {
       try {
         const payload = {
+          "token": this.token,
           "countryGeoId": this.shipGroup.shipTo.postalAddress.countryGeoId,
           "viewSize": process.env.VUE_APP_VIEW_SIZE
         }

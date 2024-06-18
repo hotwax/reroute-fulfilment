@@ -2,7 +2,7 @@ import { api } from '@/adapter';
 
 const getAssociatedStates = async (payload: any): Promise <any>  => {
   return api({
-    url: "getStates", 
+    url: "getStatesForRerouteOrder",
     method: "post",
     data: payload,
   });

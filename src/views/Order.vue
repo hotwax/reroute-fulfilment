@@ -45,7 +45,7 @@
               <ion-list>
                 <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
                 <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
-                <ion-label color="dark">{{ shipGroup.selectedFacility.city }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
+                <ion-label color="dark">{{ shipGroup.selectedFacility.city }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
               </ion-list>
               <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
             </ion-item>
@@ -148,8 +148,7 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ],
-      token: ""
+      ]
     }
   },
   computed: {
@@ -157,15 +156,15 @@ export default defineComponent({
       deliveryMethod: 'user/getDeliveryMethod',
     })
   },
+  props: ["token"],
   async mounted() {
     if (Object.keys(this.$route.query).length > 0) {
-      if(!this.$route.query.oms || !this.$route.query.token) {
+      if(!this.$route.query.oms || !this.token) {
         // invalid request
         return;
       }
-      this.token = this.$route.query.token as any
       initialise({
-        token: this.$route.query.token,
+        token: "",  // Not passing token, as in this app we don't want to send the token in the Authorizartion header and instead the token will be passed in the params/body
         instanceUrl: `${this.$route.query.oms}/api/`,
         cacheMaxAge: this.maxAge,
         events: {
@@ -174,6 +173,7 @@ export default defineComponent({
           }
         }
       })
+      this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
     }
   },
@@ -201,9 +201,11 @@ export default defineComponent({
       }
 
       try {
-        resp = await OrderService.getOrder(this.token);
-        if (!hasError(resp) && resp.data.order) {
-          order = resp.data.order;
+        resp = await OrderService.getOrder({
+          token: this.token
+        });
+        if (!hasError(resp) && resp.data.id) {
+          order = resp.data;
           const productIds: any = new Set();
           order.shipGroup = order.shipGroup.filter((group: any) => {
             if(group.facilityId === '_NA_') {
@@ -217,7 +219,7 @@ export default defineComponent({
             }
           })
           if (productIds.length) await this.fetchProducts([...productIds])
-          await this.store.dispatch("user/getConfiguration", order.productStoreId);
+          await this.store.dispatch("user/getConfiguration", { productStoreId: order.productStoreId, token: this.token});
           this.order = order;
           if (productIds.size) await this.fetchProducts([...productIds])
         }
@@ -335,6 +337,7 @@ export default defineComponent({
           backdropDismiss: false,
           componentProps: {
             shipGroup,
+            token: this.token
           }
         })
       modal.onDidDismiss().then((result) => {
