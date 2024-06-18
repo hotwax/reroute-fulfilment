@@ -130,7 +130,6 @@ export default defineComponent({
 
       if (point) {
         payload.point = point
-        payload.distance = process.env.VUE_APP_DEFAULT_STORELOOKUP_DISTANCE ? process.env.VUE_APP_DEFAULT_STORELOOKUP_DISTANCE : 50
       }
       
       try {
