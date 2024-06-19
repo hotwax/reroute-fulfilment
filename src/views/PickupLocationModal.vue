@@ -162,19 +162,31 @@ export default defineComponent({
 
     async checkInventory(facilityIds: Array<string>) {
       const productIds = this.shipGroup.items.map((item: any) => item.productId)
-      try {
-        const productInventoryResp = await StockService.checkInventory({
-          "filters": {
-            "productId": productIds,
-            "facilityId": facilityIds
-          },
-          "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
-        });
+      let isScrollable = true, viewSize = 100, total = 0;
+      let productInventoryResp = [] as any;
 
-        if (hasError(productInventoryResp) || !productInventoryResp.data.count) {
-          return [];
+      try {
+        while(isScrollable) {
+          const resp = await StockService.checkInventory({
+            "filters": {
+              "productId": productIds,
+              "facilityId": facilityIds
+            },
+            "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
+            viewSize
+          });
+
+          if(!hasError(resp) && resp.data.count) {
+            if(!productInventoryResp.length) {
+              productInventoryResp = resp.data.docs
+              total = resp.data.count;
+            } else {
+              productInventoryResp = productInventoryResp.concat(resp.data.docs)
+            }
+            if(productInventoryResp >= total) isScrollable = false;
+          }
         }
-        return productInventoryResp.data.docs.filter((store: any) => store.atp > 0)
+        return productInventoryResp.filter((store: any) => store.atp > 0)
       } catch (error) {
         console.error(error)
       }
