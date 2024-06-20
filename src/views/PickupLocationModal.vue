@@ -160,8 +160,7 @@ export default defineComponent({
       }
     },
 
-    async checkInventory(facilityIds: Array<string>) {
-      const productIds = this.shipGroup.items.map((item: any) => item.productId)
+    async checkInventory(facilityIds: Array<string>, productIds: Array<string>) {
       let isScrollable = true, viewSize = 250, viewIndex = 0, total = 0;
       let productInventoryResp = [] as any;
 
@@ -184,7 +183,7 @@ export default defineComponent({
             } else {
               productInventoryResp = productInventoryResp.concat(resp.data.docs)
             }
-            if(productInventoryResp >= total) isScrollable = false;
+            if(productInventoryResp.length >= total) isScrollable = false;
             viewIndex++;
           }
         }
@@ -210,10 +209,10 @@ export default defineComponent({
         if (!stores?.length) return;
 
         const facilityIds = stores.map((store: any) => store.storeCode)
-        const storesWithInventory = await this.checkInventory(facilityIds)
+        const productIds = [...new Set(this.shipGroup.items.map((item: any) => item.productId))] as any;
+        const storesWithInventory = await this.checkInventory(facilityIds, productIds)
 
         if (!storesWithInventory?.length) return;
-        const productIds = this.shipGroup.items.map((item: any) => item.productId)
 
         stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
