@@ -162,7 +162,7 @@ export default defineComponent({
 
     async checkInventory(facilityIds: Array<string>) {
       const productIds = this.shipGroup.items.map((item: any) => item.productId)
-      let isScrollable = true, viewSize = 100, viewIndex = 0, total = 0;
+      let isScrollable = true, viewSize = 250, viewIndex = 0, total = 0;
       let productInventoryResp = [] as any;
 
       try {
