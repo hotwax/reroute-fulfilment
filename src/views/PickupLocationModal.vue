@@ -125,7 +125,7 @@ export default defineComponent({
     async getStores(point?: string) {
       let payload = {
         "viewSize": process.env.VUE_APP_VIEW_SIZE,
-        "filters": ["storeType: RETAIL_STORE"]
+        "filters": ["storeType: RETAIL_STORE", "pickup_pref: true"]
       } as any
 
       if (point) {
