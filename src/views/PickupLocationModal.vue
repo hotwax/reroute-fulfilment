@@ -162,7 +162,7 @@ export default defineComponent({
 
     async checkInventory(facilityIds: Array<string>) {
       const productIds = this.shipGroup.items.map((item: any) => item.productId)
-      let isScrollable = true, viewSize = 100, total = 0;
+      let isScrollable = true, viewSize = 100, viewIndex = 0, total = 0;
       let productInventoryResp = [] as any;
 
       try {
@@ -173,7 +173,8 @@ export default defineComponent({
               "facilityId": facilityIds
             },
             "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
-            viewSize
+            viewSize,
+            viewIndex
           });
 
           if(!hasError(resp) && resp.data.count) {
@@ -184,6 +185,7 @@ export default defineComponent({
               productInventoryResp = productInventoryResp.concat(resp.data.docs)
             }
             if(productInventoryResp >= total) isScrollable = false;
+            viewIndex++;
           }
         }
         return productInventoryResp.filter((store: any) => store.atp > 0)
