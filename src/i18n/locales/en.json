@@ -26,7 +26,7 @@
   "Logout": "Logout",
   "mi": "mi",
   "Nearby stores": "Nearby stores",
-  "No nearby stores found": "No nearby stores found",	
+  "Inventory not available at any nearby store, please select alternate delivery method": "Inventory not available at any nearby store, please select alternate delivery method",
   "OMS": "OMS",
   "Order ID": "Order ID",
   "Order cancelled successfully": "Order cancelled successfully",
