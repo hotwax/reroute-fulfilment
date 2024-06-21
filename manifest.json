@@ -1,6 +1,6 @@
 {
     "name": "Reroute Fulfilment Application",
-    "short_name": "Reroute",
+    "short_name": "Reroute Fulfilment",
     "theme_color": "#FFFFFF",
     "icons": [{
             "src": "public/img/icons/favicon-16x16.png",
