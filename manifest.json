@@ -1,6 +1,6 @@
 {
-    "name": "Reroute Fulfilment Application",
-    "short_name": "Reroute",
+    "name": "Hotwax Commerce Reroute Fulfilment",
+    "short_name": "Reroute Fulfilment",
     "theme_color": "#FFFFFF",
     "icons": [{
         "src": "public/img/icons/favicon-16x16.png",
