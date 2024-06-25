@@ -29,7 +29,11 @@
       <ion-radio-group v-model="selectedFacility">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
           <ion-radio :value="store">
-              <ion-label>{{ store.facilityName }}</ion-label>
+              <ion-label>
+                {{ store.facilityName }}
+                <p>{{ store.address1 }}</p>
+                <p>{{ store.city }}{{ store.city && store.state ? ", " : "" }}{{ store.state }}</p>
+              </ion-label>
               <!-- Showing store distance in miles -->
               <ion-label v-if="store.distance">{{ store.distance }} {{ $t("mi") }}</ion-label>
           </ion-radio>
