@@ -31,7 +31,8 @@
           <ion-radio :value="store">
               <ion-label>
                 {{ store.facilityName }}
-                <p>{{ store.address1 }} {{ store.address2 }} {{ store.city }}</p>
+                <p>{{ store.address1 }}</p>
+                <p>{{ store.city }} {{ store.state }}</p>
               </ion-label>
               <!-- Showing store distance in miles -->
               <ion-label v-if="store.distance">{{ store.distance }} {{ $t("mi") }}</ion-label>
