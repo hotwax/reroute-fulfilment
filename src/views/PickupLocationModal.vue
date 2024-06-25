@@ -37,7 +37,7 @@
       </ion-radio-group>
     </ion-list>
     <ion-item v-else lines="none" class="ion-text-center">
-      <ion-label>{{ $t("No nearby stores found") }}</ion-label>
+      <ion-label>{{ $t("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
     </ion-item>
     <!-- Only show select button if there are stores to select from -->
     <div v-if="nearbyStores.length" class="ion-text-center">
@@ -125,7 +125,7 @@ export default defineComponent({
     async getStores(point?: string) {
       let payload = {
         "viewSize": process.env.VUE_APP_VIEW_SIZE,
-        "filters": ["storeType: RETAIL_STORE"]
+        "filters": ["storeType: RETAIL_STORE", "pickup_pref: true"]
       } as any
 
       if (point) {
