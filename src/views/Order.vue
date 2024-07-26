@@ -77,6 +77,9 @@
               <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
             </ion-card>
           </div>
+          <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
+            <ion-label>{{ $t("An email will be sent to you when your item(s) are ready to collect at the new requested location(s).") }}</ion-label>
+          </div>
           <div v-else class="ion-text-center ion-padding-top">
             <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
           </div>
@@ -150,7 +153,8 @@ export default defineComponent({
           name: 'Shipping',
           value: 'STANDARD'
         }
-      ]
+      ],
+      isOrderUpdated: false
     }
   },
   computed: {
@@ -286,6 +290,7 @@ export default defineComponent({
           shipGroup.shipTo.postalAddress = shipGroup.updatedAddress
           shipGroup.updatedAddress = null
           showToast(translate("Changes saved"))
+          this.isOrderUpdated = true
         } else {
           showToast(translate("Failed to update the shipping addess"))
         }
@@ -313,6 +318,7 @@ export default defineComponent({
         if (resp.status === 200 && !hasError(resp)) {
           shipGroup.facilityId = shipGroup.selectedFacility.facilityId
           showToast(translate("Changes saved"))
+          this.isOrderUpdated = true
         } else {
           showToast(translate("Failed to update the pickup store"))
         }
