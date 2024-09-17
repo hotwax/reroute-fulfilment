@@ -120,7 +120,7 @@ const actions: ActionTree<UserState, RootState> = {
         token,
         inputFields: {
           productStoreId,
-          "settingTypeEnumId": ["CUST_DLVRMTHD_UPDATE", "CUST_DLVRADR_UPDATE", "CUST_PCKUP_UPDATE", "CUST_ALLOW_CNCL", "RF_SHIPPING_METHOD"],
+          "settingTypeEnumId": ["CUST_DLVRMTHD_UPDATE", "CUST_DLVRADR_UPDATE", "CUST_PCKUP_UPDATE", "CUST_ALLOW_CNCL", "RF_SHIPPING_METHOD", "CUST_ORD_ITEM_SPLIT"],
           "settingTypeEnumId_op": "in"
         },
         viewSize: 100
@@ -128,10 +128,12 @@ const actions: ActionTree<UserState, RootState> = {
       if (!hasError(resp)) {
         const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
         const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
+        const isSplitEnabled = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'CUST_ORD_ITEM_SPLIT')?.settingValue
         const appPermissions = prepareAppPermissions(permissions);
         setPermissions(appPermissions);
         commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? deliveryMethod : "STANDARD");
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+        commit(types.USER_ORDER_SPLIT_CONFIG_UPDATED, isSplitEnabled === "true");
       }
     } catch (error) {
       console.error(error)

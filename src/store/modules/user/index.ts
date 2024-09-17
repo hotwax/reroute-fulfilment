@@ -13,6 +13,7 @@ const userModule: Module<UserState, RootState> = {
       instanceUrl: '',
       deliveryMethod: '',
       permissions: [],
+      isSplitEnabled: false
     },
     getters,
     actions,

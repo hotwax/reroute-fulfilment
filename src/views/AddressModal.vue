@@ -1,39 +1,39 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-title>{{ $t("Shipping address") }}</ion-title>
-      <ion-buttons slot="end" @click="close()">
+      <ion-buttons slot="start" @click="closeModal()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
+      <ion-title>{{ translate("Shipping address") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-input :label="$t('First name')" class="ion-text-right" name="firstName" v-model="address.firstName" id="firstName" type="text"/>
+        <ion-input :label="translate('First name')" class="ion-text-right" name="firstName" v-model="address.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Last name')" class="ion-text-right" name="lastName" v-model="address.lastName" id="lastName" type="text"/>
+        <ion-input :label="translate('Last name')" class="ion-text-right" name="lastName" v-model="address.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Street')" class="ion-text-right" name="street" v-model="address.address1" id="address1" type="text"/>
+        <ion-input :label="translate('Street')" class="ion-text-right" name="street" v-model="address.address1" id="address1" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('City')" class="ion-text-right" name="city" v-model="address.city" id="city" type="text"/>
+        <ion-input :label="translate('City')" class="ion-text-right" name="city" v-model="address.city" id="city" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-select :label="$t('State')" interface="popover" v-model="address.stateProvinceGeoId">
+        <ion-select :label="translate('State')" :placeholder="translate('Select')" interface="popover" v-model="address.stateProvinceGeoId">
           <ion-select-option v-for="state in states" :key="state.geoId" :value="state.geoId" >{{ state.geoName }}</ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Zipcode')" class="ion-text-right" name="zipcode" v-model="address.postalCode" id="postalCode"/>
+        <ion-input :label="translate('Zipcode')" class="ion-text-right" name="zipcode" v-model="address.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
-      <ion-button @click="updateAddress()">{{ $t("Save shipping address") }}</ion-button>
+      <ion-button @click="updateAddress()">{{ translate("Save shipping address") }}</ion-button>
     </div>
   </ion-content>
 </template>
@@ -95,11 +95,11 @@ export default defineComponent({
       loader: null as any
     };
   },
-  props: ["shipGroup", "token"],
+  props: ["shipGroup", "token", "updatedAddress"],
   async mounted() {
     this.presentLoader()
     await this.getAssociatedStates()
-    if (this.shipGroup.shipmentMethodTypeId != 'STOREPICKUP') this.prepareAddress();
+    this.prepareAddress();
     this.dismissLoader()
   },
   methods: {
@@ -113,11 +113,11 @@ export default defineComponent({
       // In some cases, we get a stateProvinceGeoId that does not exist in data, thus state is not displayed on the UI but originally the field has information thus toast of empty field is not displayed
       // thus added a check that if the geoCode is not found in the states fetched from the server, do not stop the address update process and pass the same state that was previously in the address.
       this.address.stateCode = state?.geoCode || this.address.stateProvinceGeoId;
-      this.close(this.address);
+      this.closeModal(this.address);
     },
     prepareAddress() {
-      if(this.shipGroup?.updatedAddress) {
-        this.address = this.shipGroup.updatedAddress
+      if(this.updatedAddress) {
+        this.address = this.updatedAddress
         return;
       }
 
@@ -149,13 +149,13 @@ export default defineComponent({
       }
     },
 
-    close(address?: any) {
-      modalController.dismiss({ dismissed: true }, address);
+    closeModal(address?: any) {
+      modalController.dismiss({ dismissed: true, updatedAddress: address });
     },
     async presentLoader() {
       this.loader = await loadingController
         .create({
-          message: this.$t("Fetching address")
+          message: this.translate("Fetching address")
         });
       await this.loader.present();
     },
@@ -169,7 +169,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { closeOutline, router, store };
+    return {
+      closeOutline,
+      router,
+      store,
+      translate
+    };
   }
 });
 </script>

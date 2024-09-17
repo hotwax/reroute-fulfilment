@@ -24,6 +24,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     getUserPermissions (state) {
         return state.permissions;
+    },
+    isSplitEnabled (state) {
+        return state.isSplitEnabled;
     }
 }
 export default getters;

@@ -1,60 +1,72 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-buttons slot="end" @click="close()">
+      <ion-buttons slot="start" @click="closeModal()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Select pickup location") }}</ion-title>
+      <ion-title>{{ translate("Select pickup location") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
-    <ion-card v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
-      <ion-item lines="none">
-        <ion-label>{{ $t("Showing pickup locations near") }}</ion-label>
-      </ion-item>
-      <ion-item>
-        <ion-list>
-          <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
-        </ion-list>
-      </ion-item>
-    </ion-card>
-    <ion-list v-if="nearbyStores.length">
-      <ion-list-header lines="full" color="light">
-        <ion-label>{{ $t("Nearby stores") }}</ion-label>
-      </ion-list-header>
-      <ion-radio-group v-model="selectedFacility">
-        <ion-item v-for="store of nearbyStores" :key="store.facilityId">
-          <ion-radio :value="store">
+    <ion-list v-if="stores.length">
+      <ion-accordion-group>
+        <ion-accordion>
+          <ion-item slot="header" color="light">
+            <ion-icon :icon="locationOutline" slot="start" />
+            <ion-label>{{ translate("Showing pickup location near your saved address") }}</ion-label>
+          </ion-item>
+          <ion-item slot="content">
+            <ion-label>
+              {{ customerAddress.toName }}
+              <p>{{ customerAddress.address1 }}</p>
+              <p>{{ customerAddress.city }} {{ customerAddress.stateProvinceGeoId }} {{ customerAddress.postalCode }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-accordion>
+      </ion-accordion-group>
+
+      <ion-radio-group v-model="selectedFacilityIdValue">
+        <ion-item lines="none">
+          <ion-radio label-placement="end" value="cancel">
+            <ion-label>{{ translate("Request cancelation") }}</ion-label>
+          </ion-radio>
+        </ion-item>
+
+        <ion-list-header lines="full" color="light">
+          <ion-label>{{ translate("Nearby stores") }}</ion-label>
+        </ion-list-header>
+
+        <ion-item v-for="store of stores" :key="store.facilityId">
+          <ion-radio :value="store.facilityId" label-placement="end">
             <ion-label>
               {{ store.facilityName }}
               <p>{{ store.address1 }}</p>
               <p>{{ store.city }}{{ store.city && store.state ? ", " : "" }}{{ store.state }}</p>
             </ion-label>
             <!-- Showing store distance in miles -->
-            <ion-label v-if="store.distance">{{ store.distance }} {{ $t("mi") }}</ion-label>
+            <ion-label v-if="store.distance">{{ store.distance }} {{ translate("mi") }}</ion-label>
           </ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
     <ion-item v-else lines="none" class="ion-text-center">
-      <ion-label>{{ $t("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
+      <ion-label>{{ translate("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
     </ion-item>
-    <!-- Only show select button if there are stores to select from -->
-    <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
+
+    <div v-if="stores.length" class="ion-text-center">
+      <ion-button  @click="save()">{{ translate("Save selection") }}</ion-button>
     </div>
   </ion-content>
 </template>
 
 <script lang="ts">
 import {
+  IonAccordion,
+  IonAccordionGroup,
   IonButton,
   IonButtons,
-  IonCard,
   IonContent,
   IonHeader,
   IonIcon,
@@ -66,24 +78,21 @@ import {
   IonRadioGroup,
   IonTitle,
   IonToolbar,
-  loadingController,
   modalController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { closeOutline } from 'ionicons/icons';
+import { closeOutline, locationOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
-import { FacilityService } from '@/services/FacilityService';
-import { StockService } from '@/services/StockService';
-import { hasError } from '@/utils';
-import { UtilityService } from '@/services/UtilityService';
+import { translate } from '@/i18n';
 
 export default defineComponent({
   name: 'PickupLocationModal',
   components: {
+    IonAccordion,
+    IonAccordionGroup,
     IonButton,
     IonButtons,
-    IonCard,
     IonContent,
     IonHeader,
     IonIcon,
@@ -99,146 +108,41 @@ export default defineComponent({
   data() {
     return {
       loader: null as any,
-      nearbyStores: [] as any,
+      stores: [] as any,
       facilityId: '',
-      selectedFacility: {}
+      selectedFacilityIdValue: ""
     }
   },
-  props: ["shipGroup"],
+  props: ["nearbyStores", "isPickupForAll", "availableStores", "storesWithInventory", "selectedFacilityId", "currentProductId", "customerAddress"],
   async mounted() {
-    await this.presentLoader()
-    await this.getPickupStores();
-    this.dismissLoader()
-    
+    if(this.isPickupForAll) {
+      this.stores = this.nearbyStores
+    } else {
+      this.availableStores.map((store: any) => {
+        const inventoryDetails = this.storesWithInventory.find((storeInv: any) => store.storeCode === storeInv.facilityId && storeInv.productId === this.currentProductId)
+        if(inventoryDetails) this.stores.push({...store, ...inventoryDetails, distance: store.dist })
+      })
+    }
+    if(this.selectedFacilityId) this.selectedFacilityIdValue = this.selectedFacilityId
   },
   methods: {
-    async presentLoader() {
-      this.loader = await loadingController
-        .create({
-          message: this.$t("Fetching stores."),
-          translucent: true,
-        });
-      await this.loader.present();
+    closeModal(payload = {}) {
+      modalController.dismiss({ dismissed: true, ...payload });
     },
-    dismissLoader() {
-      if (this.loader) {
-        this.loader.dismiss();
-        this.loader = null;
-      }
-    },
-    async getStores(point?: string) {
-      let payload = {
-        "viewSize": process.env.VUE_APP_VIEW_SIZE,
-        "filters": ["storeType: RETAIL_STORE", "pickup_pref: true"]
-      } as any
-
-      if (point) {
-        payload.point = point
-      }
-      
-      try {
-        const storeLookupResp = await FacilityService.getStores(payload)
-        if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
-          return [];
-        } 
-        return storeLookupResp.data.response.docs
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    async getDeliveryAddressGeoLocation() {
-      try {
-        const shipGroupLocationResp = await UtilityService.getGeoLocation({
-          "json": {
-            "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
-          }
-        })
-
-        if (shipGroupLocationResp.status !== 200 || hasError(shipGroupLocationResp) || !shipGroupLocationResp.data.response.numFound) {
-          return '';
-        }
-        return shipGroupLocationResp.data.response.docs[0].location
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    async checkInventory(facilityIds: Array<string>, productIds: Array<string>) {
-      let isScrollable = true, viewSize = 250, viewIndex = 0, total = 0;
-      let productInventoryResp = [] as any;
-
-      try {
-        while(isScrollable) {
-          const resp = await StockService.checkInventory({
-            "filters": {
-              "productId": productIds,
-              "facilityId": facilityIds
-            },
-            "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
-            viewSize,
-            viewIndex
-          });
-
-          if(!hasError(resp) && resp.data.count) {
-            if(!productInventoryResp.length) {
-              productInventoryResp = resp.data.docs
-              total = resp.data.count;
-            } else {
-              productInventoryResp = productInventoryResp.concat(resp.data.docs)
-            }
-            if(productInventoryResp.length >= total) isScrollable = false;
-            viewIndex++;
-          }
-        }
-        return productInventoryResp.filter((store: any) => store.atp > 0)
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    async getPickupStores() {
-      try {
-        let stores;
-        if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-          // shipgroup is in brokering queue in this case so we do not
-          // have any facility hence, all the stores are fetched
-          stores = await this.getStores()
-        } else {
-          const location = await this.getDeliveryAddressGeoLocation()
-          if (!location) return;
-          stores = await this.getStores(location)
-        }
-
-        if (!stores?.length) return;
-
-        const facilityIds = stores.map((store: any) => store.storeCode)
-        const productIds = [...new Set(this.shipGroup.items.map((item: any) => item.productId))] as any;
-        const storesWithInventory = await this.checkInventory(facilityIds, productIds)
-
-        if (!storesWithInventory?.length) return;
-
-        stores.map((storeData: any) => {
-          const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
-          if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: storeData.dist });
-        });
-      } catch (error) {
-        console.error(error)
-      }
-    },
-
-    updateFacility() {
-      this.close(this.selectedFacility);
-    },
-
-    close(selectedFacility?: any) {
-      modalController.dismiss({ dismissed: true }, selectedFacility);
+    save() {
+      this.closeModal({ selectedFacilityId: this.selectedFacilityIdValue })
     }
   },
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { closeOutline, router, store };
+    return {
+      closeOutline,
+      locationOutline,
+      router,
+      store,
+      translate
+    };
   }
 });
 </script>

@@ -48,6 +48,7 @@
   "Street": "Street",
   "Tracking code": "Tracking code",
   "Username": "Username",
+  "was unable to prepare your order. Please select alternate options.": "{facilityName} was unable to prepare your order. Please select alternate options.",
   "Your Order": "Your Order",
   "Zipcode": "Zipcode"
 }

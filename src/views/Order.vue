@@ -4,7 +4,7 @@
       <main>
         <div v-if="Object.keys(order).length">
           <ion-item class="ion-text-center" lines="none">
-            <h1>{{ $t("Your Order") }}</h1>
+            <h1>{{ translate("Your Order") }}</h1>
           </ion-item>
           <ion-card>
             <ion-item lines="none" class="border">
@@ -15,77 +15,119 @@
               <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
             </ion-item>
           </ion-card>
+
           <div v-if="order.statusId !== 'ORDER_CANCELLED' && order.shipGroup.length > 0" >
             <ion-card v-for="(shipGroup, index) of order.shipGroup" :key="index">
-              <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="full">
-                <ion-thumbnail slot="start">
-                  <Image :src='getProduct(item.productId).mainImageUrl' />
-                </ion-thumbnail>
-                <ion-label slot="start">
-                  <p>{{ item.brandName }}</p>
-                  <h2>{{ item.name }}</h2>
-                  <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
-                    <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
-                  </p>
-                </ion-label>
+              <ion-item lines="full">
+                <ion-label>{{ translate("was unable to prepare your order. Please select alternate options.", { facilityName: getStoreName(originFacilityId) }) }}</ion-label>
               </ion-item>
-              <!-- TODO -->
-              <!-- <ion-item>
-                <ion-label>
-                  status description
-                </ion-label>
-              </ion-item> -->
-              <ion-item>
-                <ion-select :label="$t('Delivery method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
+
+              <ion-item lines="none">
+                <ion-select :label="translate('Delivery method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
                   <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
                 </ion-select>
               </ion-item>
-              <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
-              <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline" class="ion-padding">{{ $t("Select pickup location")}}</ion-button>
-              <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
-                <ion-list>
-                  <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.city }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
-                </ion-list>
-                <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
+
+              <template v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
+                <ion-segment v-if="isSplitEnabled && nearbyStores.length" @ionChange="segmentChanged($event, shipGroup)" v-model="selectedSegment">
+                  <ion-segment-button value="together">
+                    <ion-label>{{ translate("Together") }}</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="separate">
+                    <ion-label>{{ translate("Separate") }}</ion-label>
+                  </ion-segment-button>
+                </ion-segment>
+                <ion-item v-else>
+                  <ion-label>{{ translate("These products are not available at a single store for pickup. Please select alternate options for items individually.") }}</ion-label>
+                </ion-item>
+              </template>
+
+              <ion-button expand="block" class="ion-margin" fill="outline">
+                <ion-icon :icon="colorWandOutline" slot="start" />
+                {{ translate("Suggest store") }}
+              </ion-button>
+
+              <ion-item lines="full">
+                <ion-label>
+                  <p>{{ translate("We'll try to find a location with the most items in stock.") }}</p>
+                </ion-label>
               </ion-item>
-              <ion-item v-else>
-                <ion-list v-if="shipGroup.updatedAddress">
-                  <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.city }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
-                </ion-list>
-                <ion-list v-else-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
-                  <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
-                </ion-list>
-                <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+
+              <template  v-for="item of shipGroup.items" :key="item.id">
+                <ion-item v-if="item.status !== 'ITEM_CANCELLED' && !item.selectedFacilityId" lines="full">
+                  <ion-thumbnail slot="start">
+                    <Image :src='getProduct(item.productId).mainImageUrl' />
+                  </ion-thumbnail>
+                  <ion-label>
+                    {{ item.name }}
+                    <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
+                      <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
+                    </p>
+                  </ion-label>
+  
+                  <ion-button v-if="selectedSegment === 'separate' && shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'" slot="end" fill="clear" @click="updatePickupLocation(false, item.selectedFacilityId, item)">
+                    <ion-icon :icon="addOutline" slot="icon-only" />
+                  </ion-button>
+                </ion-item>
+              </template>
+
+              <div v-for="(items, facilityId) in selectedItemsByFacility" :key="facilityId">
+                <ion-item-divider color="light" v-if="items.length">
+                  <ion-label>{{ facilityId }}</ion-label>
+                </ion-item-divider>
+
+                <div v-for="item in items" :key="item.id">
+                  <ion-item v-if="item.status !== 'ITEM_CANCELLED'" lines="full">
+                    <ion-thumbnail slot="start">
+                      <Image :src='getProduct(item.productId).mainImageUrl' />
+                    </ion-thumbnail>
+                    <ion-label>
+                      {{ item.name }}
+                      <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
+                        <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
+                      </p>
+                    </ion-label>
+
+                    <ion-button slot="end" fill="clear" @click="removeItemFromFacility(item, facilityId)" color="medium">
+                      <ion-icon :icon="removeCircleOutline" slot="icon-only" />
+                    </ion-button>
+                  </ion-item>
+                </div>
+              </div>
+
+              <ion-item v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedFacility.facilityId">
+                <ion-label>
+                  {{ selectedFacility.facilityName }}
+                  <p>{{ selectedFacility.address1 }}</p>
+                  <p>{{ selectedFacility.city }} {{ selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ selectedFacility.postalCode }}</p>
+                </ion-label>
               </ion-item>
-              <!-- TODO -->
-              <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
-                <ion-label>{{ $t("Estimated delivery") }}</ion-label>
-                <ion-label slot="end">{{ $t("03/03/2023") }}</ion-label>
-              </ion-item> -->
-              <ion-item v-if="shipGroup.trackingNumber">
-                <ion-label>{{ $t('Tracking code') }}</ion-label>
-                <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
+              <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP' && updatedAddress.firstName">
+                <ion-label>
+                  {{ updatedAddress.firstName }} {{ updatedAddress.lastName }}
+                  <p>{{ updatedAddress.address1 }}</p>
+                  <p>{{ updatedAddress.city }} {{ updatedAddress.stateCode }} {{ updatedAddress.postalCode }}</p>
+                </ion-label>
               </ion-item>
-              <!-- Disabling the buttons if address or facility is not added -->
-              <ion-button :disabled="(!shipGroup.updatedAddress && (!shipGroup.selectedFacility || shipGroup.selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-              <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
+
+              <ion-button v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedSegment === 'together'" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE)" @click="updatePickupLocation(true, selectedFacility.facilityId)" expand="block" fill="outline" class="ion-margin">{{ selectedFacility.facilityId ? translate("Change pickup location") : translate("Select pickup location")}}</ion-button>
+              <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline" class="ion-margin">{{ updatedAddress.address1 ? translate("Edit address") : translate("Add address") }}</ion-button>
+
+              <div class="actions">
+                <ion-button :disabled="(!updatedAddress && (!selectedFacility.facilityId || selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
+                <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ translate("Cancel") }}</ion-button>
+              </div>
             </ion-card>
           </div>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
-            <ion-label>{{ $t("An email will be sent to you when your item(s) are ready to collect at the new requested location(s).") }}</ion-label>
+            <ion-label>{{ translate("An email will be sent to you when your item(s) are ready to collect at the new requested location(s).") }}</ion-label>
           </div>
           <div v-else class="ion-text-center ion-padding-top">
-            <ion-label>{{ $t("Order item not eligible for reroute fulfilment") }}</ion-label>
+            <ion-label>{{ translate("Order item not eligible for reroute fulfilment") }}</ion-label>
           </div>
         </div>
         <div v-else-if="loader == null" class="ion-text-center ion-padding-top">
-          <ion-label>{{ $t("Order not found") }}</ion-label>
+          <ion-label>{{ translate("Order not found") }}</ion-label>
         </div>
       </main>
     </ion-content>
@@ -98,13 +140,16 @@ import {
   IonButton,
   IonCard,
   IonContent,
+  IonIcon,
   IonItem,
+  IonItemDivider,
   IonLabel,
-  IonList,
   IonNote,
   IonPage,
   IonSelect,
   IonSelectOption,
+  IonSegment,
+  IonSegmentButton,
   IonThumbnail,
   loadingController,
   modalController,
@@ -121,6 +166,9 @@ import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "@/views/PickupLocationModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { initialise } from '@/adapter'
+import { addOutline, colorWandOutline, removeCircleOutline, storefrontOutline } from "ionicons/icons";
+import { FacilityService } from '@/services/FacilityService';
+import { StockService } from '@/services/StockService';
 
 export default defineComponent({
   name: "Order",
@@ -129,12 +177,15 @@ export default defineComponent({
     IonButton,
     IonCard,
     IonContent,
+    IonIcon,
     IonItem,
+    IonItemDivider,
     IonLabel,
-    IonList,
     IonNote,
     IonSelect,
     IonSelectOption,
+    IonSegment,
+    IonSegmentButton,
     IonThumbnail,
     IonPage,
   },
@@ -154,12 +205,21 @@ export default defineComponent({
           value: 'STANDARD'
         }
       ],
-      isOrderUpdated: false
+      originFacilityId: "",
+      selectedSegment: "separate",
+      customerAddress: {} as any,
+      nearbyStores: [] as any,
+      availableStores: [] as any,
+      storesWithInventory: [] as any,
+      selectedFacility: {} as any,
+      updatedAddress: {} as any,
+      selectedItemsByFacility: {} as any
     }
   },
   computed: {
     ...mapGetters({
       deliveryMethod: 'user/getDeliveryMethod',
+      isSplitEnabled: 'user/isSplitEnabled',
     })
   },
   props: ["token"],
@@ -181,13 +241,17 @@ export default defineComponent({
       })
       this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
+      this.fetchOrderFacilityChangeHistory()
+      this.customerAddress = await OrderService.fetchCustomerSavedAddress(this.order.id); 
+      await this.getPickupStores();
+      if(!this.nearbyStores.length) this.selectedSegment = "separate"
     }
   },
   methods: {
     async presentLoader() {
       this.loader = await loadingController
         .create({
-          message: this.$t("Fetching order details."),
+          message: translate("Fetching order details."),
           translucent: true,
         });
       await this.loader.present();
@@ -234,6 +298,57 @@ export default defineComponent({
       }
       this.dismissLoader()
     },
+
+    async fetchOrderFacilityChangeHistory() {
+      try {
+        const resp = await OrderService.fetchOrderFacilityChangeHistory({
+          entityName: "OrderFacilityChange",
+          inputFields: {
+            orderId: this.order.id,
+            orderItemSeqId: this.order.shipGroup[0].items[0].itemSeqId
+          },
+          viewSize: 2,
+          orderBy: "changeDatetime ASC"
+        })
+        if(!hasError(resp)) {
+          this.originFacilityId = resp.data.docs[0]?.facilityId
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        console.error(error);
+      }
+    },
+
+    async getPickupStores() {
+      try {
+        let stores;
+        let point = ""
+        if(this.customerAddress?.latitude) {
+          point = `${this.customerAddress.latitude},${this.customerAddress.longitude}`
+        }
+
+        stores = await this.getStores(point ? point : '')
+        this.availableStores = stores;
+
+        if (!stores?.length) return;
+
+        const facilityIds = stores.map((store: any) => store.storeCode)
+        const productIds = [...new Set(this.order.shipGroup[0].items.map((item: any) => item.productId))] as any;
+        const storesWithInventory = await this.checkInventory(facilityIds, productIds)
+        this.storesWithInventory = storesWithInventory
+
+        if (!storesWithInventory?.length) return;
+
+        stores.map((storeData: any) => {
+          const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
+          if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: storeData.dist });
+        });
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
     async fetchProducts(productIds: any) {
       const productIdFilter = productIds.reduce((filter: string, productId: any) => {
         if (filter !== '') filter += ' OR '
@@ -256,197 +371,137 @@ export default defineComponent({
       }
     },
 
+    segmentChanged(event: any, shipGroup: any) {
+      this.selectedSegment = event.detail.value 
+      if(shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP") {
+        this.selectedFacility = {}
+        this.selectedItemsByFacility = {}
+        this.order.shipGroup[0].items.map((item: any) => {
+          item.selectedFacilityId = ""
+        })
+      }
+    },
+
+    getStoreName(facilityId: any) {
+      return this.nearbyStores.find((store: any) => store.storeCode === facilityId)?.storeName
+    },
+
     getProduct(productId: string) {
       return this.products[productId] ? this.products[productId] : {}
-    },
-
-    async updateShippingAddress(shipGroup: any) {
-      let resp
-      const payload = {
-        "orderId": this.order.id,
-        "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "contactMechId": shipGroup.shipmentMethodTypeId === 'STOREPICKUP' ? "" :shipGroup.shipTo.postalAddress.id,
-        "shipmentMethod": `${this.deliveryMethod}@_NA_`,
-        "contactMechPurposeTypeId": "SHIPPING_LOCATION",
-        "facilityId": shipGroup.facilityId,
-        "toName": `${shipGroup.updatedAddress.firstName} ${shipGroup.updatedAddress.lastName}`,
-        "address1": shipGroup.updatedAddress.address1,
-        "city": shipGroup.updatedAddress.city,
-        "stateProvinceGeoId": shipGroup.updatedAddress.stateProvinceGeoId,
-        "postalCode": shipGroup.updatedAddress.postalCode,
-        "countryGeoId": shipGroup.updatedAddress.countryGeoId,
-        "token": this.token
-      } as any
-
-      if (shipGroup.selectedShipmentMethodTypeId === shipGroup.shipmentMethodTypeId) {
-        // In case of address edit, we honour the previously selected delivery method
-        payload.shipmentMethod = `${shipGroup.shipmentMethodTypeId}@_NA_`
-        payload.isEdited = true
-      }
-
-      try {
-        resp = await OrderService.updateShippingAddress(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data) {
-          shipGroup.shipTo.postalAddress = shipGroup.updatedAddress
-          shipGroup.updatedAddress = null
-          showToast(translate("Changes saved"))
-          this.isOrderUpdated = true
-        } else {
-          showToast(translate("Failed to update the shipping addess"))
-        }
-      } catch (error) {
-        console.error(error)
-        showToast(translate("Failed to update the shipping addess"))
-      }
-      this.getOrder();
-    },
-
-    async updatePickupFacility(shipGroup: any) {
-      let resp
-      const payload = {
-        "orderId": this.order.id,
-        "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "contactMechId": shipGroup.shipTo.postalAddress.id,
-        "shipmentMethod": "STOREPICKUP@_NA_@CARRIER", // TODO Check why CARRIER is needed
-        "contactMechPurposeTypeId": "SHIPPING_LOCATION",
-        "facilityId": shipGroup.selectedFacility.facilityId,
-        "token": this.token
-      }
-
-      try {
-        resp = await OrderService.updatePickupFacility(payload);
-        if (resp.status === 200 && !hasError(resp)) {
-          shipGroup.facilityId = shipGroup.selectedFacility.facilityId
-          showToast(translate("Changes saved"))
-          this.isOrderUpdated = true
-        } else {
-          showToast(translate("Failed to update the pickup store"))
-        }
-      } catch (error) {
-        console.error(error)
-        showToast(translate("Failed to update the pickup store"))
-      }
-      this.getOrder();
     },
 
     updateDeliveryMethod(event: any, shipGroup: any) {
       const group = this.order.shipGroup.find((group: any) => group.shipGroupSeqId === shipGroup.shipGroupSeqId);
       group.selectedShipmentMethodTypeId = event.detail.value;
-      // Resetting the previous changes on method change
-      this.resetShipGroup(shipGroup)
+    },
+
+    async updatePickupLocation(isPickupForAll: boolean, selectedFacilityId: any, item?: any) {
+      const modal = await modalController.create({
+        component: PickupLocationModal,
+        componentProps: {
+          isPickupForAll,
+          storesWithInventory: this.storesWithInventory,
+          nearbyStores: this.nearbyStores,
+          availableStores: this.availableStores,
+          selectedFacilityId,
+          customerAddress: this.customerAddress,
+          currentProductId: item?.productId
+        }
+      })
+
+      modal.onDidDismiss().then((result) => {
+        const selectedFacilityId = result.data.selectedFacilityId;
+
+        if (selectedFacilityId) {
+          if(isPickupForAll) {
+            this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === selectedFacilityId);
+          } else {
+            item.selectedFacilityId = selectedFacilityId
+            if(this.selectedItemsByFacility[selectedFacilityId]?.length) this.selectedItemsByFacility[selectedFacilityId].push(item);
+            else this.selectedItemsByFacility[selectedFacilityId] = [item]
+          }
+        }
+      });
+
+      return modal.present();
     },
 
     async updateDeliveryAddress(shipGroup: any) {
-      const modal = await modalController
-        .create({
-          component: AddressModal,
-          // Adding backdropDismiss as false because on dismissing the modal through backdrop,
-          // backrop.role returns 'backdrop' giving unexpected result
-          backdropDismiss: false,
-          componentProps: {
-            shipGroup,
-            token: this.token
-          }
-        })
+      const modal = await modalController.create({
+        component: AddressModal,
+        componentProps: {
+          shipGroup,
+          token: this.token,
+          updatedAddress: this.updatedAddress
+        }
+      })
+
       modal.onDidDismiss().then((result) => {
-        if (result.role) {
-          // role will have the passed data
-          shipGroup.updatedAddress = result.role
+        if (result.data.updatedAddress) {
+          this.updatedAddress = result.data.updatedAddress
         }
       });
+
       return modal.present();
     },
 
-    async updatePickupLocation(shipGroup: any) {
-      const modal = await modalController
-        .create({
-          component: PickupLocationModal,
-          // Adding backdropDismiss as false because on dismissing the modal through backdrop,
-          // backrop.role returns 'backdrop' giving unexpected result
-          backdropDismiss: false,
-          componentProps: {
-            shipGroup
-          }
-        })
-      modal.onDidDismiss().then((result) => {
-        if (result.role) {
-          // role will have the passed data
-          shipGroup.selectedFacility = result.role
-        }
-      });
-      return modal.present();
-    },
-
-    async save(shipGroup: any) {
-      const message = this.$t("Are you sure you want to save the changes?");
-      const alert = await alertController.create({
-        header: this.$t("Save changes"),
-        message,
-        buttons: [
-          {
-            text: this.$t("Cancel"),
-          },
-          {
-            text: this.$t("Confirm"),
-            handler: () => {
-              shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' ? this.updatePickupFacility(shipGroup) : this.updateShippingAddress(shipGroup);   
-            }
-          }
-        ],
-      });
-      return alert.present();
-    },
-
-
-    async cancelShipGroup(shipGroup: any) {
-      let resp
-      const itemReasonMap = {} as any
-      shipGroup.items.map((item: any) => itemReasonMap[item.itemSeqId] = 'OICR_CHANGE_MIND')
-      const payload = {
-        "orderId": this.order.id,
-        "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "itemReasonMap": itemReasonMap,
-        "token": this.token
-      } as any
+    async checkInventory(facilityIds: Array<string>, productIds: Array<string>) {
+      let isScrollable = true, viewSize = 250, viewIndex = 0, total = 0;
+      let productInventoryResp = [] as any;
 
       try {
-        resp = await OrderService.cancelOrderItem(payload);
-        if (resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
-          shipGroup.isCancelled = true;
-          showToast(translate("Order cancelled successfully"))
-        } else {
-          showToast(translate("Failed to cancel the order"))
+        while(isScrollable) {
+          const resp = await StockService.checkInventory({
+            "filters": {
+              "productId": productIds,
+              "facilityId": facilityIds
+            },
+            "fieldsToSelect": ["productId", "atp", "facilityName", "facilityId"],
+            viewSize,
+            viewIndex
+          });
+
+          if(!hasError(resp) && resp.data.count) {
+            if(!productInventoryResp.length) {
+              productInventoryResp = resp.data.docs
+              total = resp.data.count;
+            } else {
+              productInventoryResp = productInventoryResp.concat(resp.data.docs)
+            }
+            if(productInventoryResp.length >= total) isScrollable = false;
+            viewIndex++;
+          }
         }
+        return productInventoryResp.filter((store: any) => store.atp > 0)
       } catch (error) {
         console.error(error)
-        showToast(translate("Failed~ to cancel the order"))
       }
-      this.getOrder();
     },
 
-    async cancel(shipGroup: any) {
-      const message = this.$t("Are you sure you want to cancel the order items?");
-      const alert = await alertController.create({
-        header: this.$t("Cancel items"),
-        message,
-        buttons: [
-          {
-            text: this.$t("Don't Cancel"),
-          },
-          {
-            text: this.$t("Cancel"),
-            handler: () => {
-              this.cancelShipGroup(shipGroup);
-            }
-          }
-        ],
-      });
-      return alert.present();
+    async getStores(point?: string) {
+      let payload = {
+        "viewSize": process.env.VUE_APP_VIEW_SIZE,
+        "filters": ["storeType: RETAIL_STORE", "pickup_pref: true"]
+      } as any
+
+      if(point) {
+        payload.point = point
+      }
+      
+      try {
+        const storeLookupResp = await FacilityService.getStores(payload)
+        if (storeLookupResp.status !== 200 || hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
+          return [];
+        } 
+        return storeLookupResp.data.response.docs
+      } catch (error) {
+        console.error(error)
+      }
     },
 
-    resetShipGroup(shipGroup: any) {
-      shipGroup.updatedAddress = null
-      shipGroup.selectedFacility = null
+    removeItemFromFacility(item: any, facilityId: any) {
+      this.selectedItemsByFacility[facilityId] = this.selectedItemsByFacility[facilityId].filter((currentItem: any) => currentItem.itemSeqId !== item.itemSeqId);
+      console.log(this.selectedItemsByFacility);
     }
   },
   setup() {
@@ -454,9 +509,14 @@ export default defineComponent({
     const store = useStore();
     return {
       Actions,
+      addOutline,
       hasPermission,
+      colorWandOutline,
+      removeCircleOutline,
       router,
-      store
+      store,
+      storefrontOutline,
+      translate
     };
   }
 });
@@ -468,5 +528,11 @@ export default defineComponent({
       max-width: 400px;
       margin: auto;
     }
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--ion-color-light);
   }
 </style>

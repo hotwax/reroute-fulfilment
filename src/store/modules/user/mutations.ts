@@ -22,6 +22,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_DELIVERY_METHOD_UPDATED] (state, payload) {
         state.deliveryMethod = payload
+    },
+    [types.USER_ORDER_SPLIT_CONFIG_UPDATED] (state, payload) {
+        state.isSplitEnabled = payload
     }
 }
 export default mutations;
