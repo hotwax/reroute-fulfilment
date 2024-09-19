@@ -275,7 +275,7 @@ export default defineComponent({
       this.fetchOrderFacilityChangeHistory()
       this.customerAddress = this.order.shipGroup[0].shipTo?.postalAddress ? this.order.shipGroup[0].shipTo.postalAddress : {}
       await this.getPickupStores();
-      if(this.nearbyStores.length) {
+      if(!this.nearbyStores.length) {
         this.selectedSegment = "separate";
         this.checkForOutOfStockItems(this.order.shipGroup[0])
       } 
@@ -444,7 +444,7 @@ export default defineComponent({
       shipGroup.items.map((item: any) => {
         const isInventoryAvailable = this.storesWithInventory.some((store: any) => store.productId === item.productId && Number(store.atp) > 0)
 
-        if(isInventoryAvailable) {
+        if(!isInventoryAvailable) {
           item.isOutOfStock = true;
           this.cancelledItems.push(item);
         }
