@@ -182,7 +182,7 @@ export default defineComponent({
       cutomerAddress: {} as any,
       nearbyStores: [] as any,
       availableStores: [] as any,
-      storesWithInventory: [] as any
+      storesWithInventory: [] as any,
     }
   },
   computed: {
@@ -211,7 +211,6 @@ export default defineComponent({
       this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
       this.fetchOrderFacilityChangeHistory()
-      this.cutomerAddress = await OrderService.fetchCustomerSavedAddress(this.order.id); 
       await this.getPickupStores();
       if(!this.nearbyStores.length) this.selectedSegment = "separate"
     }
@@ -247,7 +246,7 @@ export default defineComponent({
           order = resp.data;
           const productIds: any = new Set();
           order.shipGroup = order.shipGroup.filter((group: any) => {
-            if(group.facilityId === 'PICKUP_REJECTED') {
+            if(group.facilityId === 'PICKUP_REJECTED' && group.shipmentMethodTypeId === 'STOREPICKUP') {
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
               group.items = group.items.filter((item: any) => {
                 if (item.status == 'ITEM_CANCELLED') return false;
@@ -257,6 +256,7 @@ export default defineComponent({
               return group.items.length > 0;
             }
           })
+
           if (productIds.length) await this.fetchProducts([...productIds])
           await this.store.dispatch("user/getConfiguration", { productStoreId: order.productStoreId, token: this.token});
           this.order = order;

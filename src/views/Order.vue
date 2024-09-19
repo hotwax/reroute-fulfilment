@@ -54,7 +54,7 @@
               </ion-item>
 
               <template  v-for="item of shipGroup.items" :key="item.id">
-                <ion-item v-if="item.status !== 'ITEM_CANCELLED' && !item.selectedFacilityId" lines="full">
+                <ion-item v-if="item.status !== 'ITEM_CANCELLED' && !item.selectedFacilityId && !item.isItemCancelled && !item.isOutOfStock" lines="full">
                   <ion-thumbnail slot="start">
                     <Image :src='getProduct(item.productId).mainImageUrl' />
                   </ion-thumbnail>
@@ -95,6 +95,35 @@
                 </div>
               </div>
 
+              <div v-if="cancelledItems.length">
+                <ion-item-divider color="light">
+                  <ion-label>{{ translate("Out of stock") }}</ion-label>
+                </ion-item-divider>
+
+                <div v-for="item in cancelledItems" :key="item.id">
+                  <ion-item v-if="item.status !== 'ITEM_CANCELLED'" lines="full">
+                    <ion-thumbnail slot="start">
+                      <Image :src='getProduct(item.productId).mainImageUrl' />
+                    </ion-thumbnail>
+                    <ion-label>
+                      <p class="overline" v-if="item.isItemCancelled">{{ translate("Request Cancellation") }}</p>
+                      {{ item.name }}
+                      <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
+                        <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
+                      </p>
+                    </ion-label>
+
+                    <ion-chip color="danger" outline v-if="item.isItemCancelled" slot="end">
+                      <ion-icon :icon="medkitOutline" />
+                      <ion-icon :icon="closeCircleOutline" @click="revertCancellation(item)" />
+                    </ion-chip>
+                    <ion-button color="danger" fill="clear" slot="end" v-else @click="item.isItemCancelled = true">
+                      <ion-icon :icon="medkitOutline" slot="icon-only" />
+                    </ion-button>
+                  </ion-item>
+                </div>
+              </div>
+
               <ion-item v-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedFacility.facilityId">
                 <ion-label>
                   {{ selectedFacility.facilityName }}
@@ -114,8 +143,8 @@
               <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline" class="ion-margin">{{ updatedAddress.address1 ? translate("Edit address") : translate("Add address") }}</ion-button>
 
               <div class="actions">
-                <ion-button :disabled="(!updatedAddress && (!selectedFacility.facilityId || selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
-                <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ translate("Cancel") }}</ion-button>
+                <ion-button :disabled="(!updatedAddress && (!selectedFacility.facilityId || selectedFacility.facilityId == shipGroup.facilityId))" @click="confirmSave(shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
+                <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancelOrder(shipGroup)" fill="clear" color="danger">{{ translate("Cancel") }}</ion-button>
               </div>
             </ion-card>
           </div>
@@ -166,7 +195,7 @@ import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "@/views/PickupLocationModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { initialise } from '@/adapter'
-import { addOutline, colorWandOutline, removeCircleOutline, storefrontOutline } from "ionicons/icons";
+import { addOutline, closeCircleOutline, colorWandOutline, medkitOutline, removeCircleOutline, storefrontOutline } from "ionicons/icons";
 import { FacilityService } from '@/services/FacilityService';
 import { StockService } from '@/services/StockService';
 
@@ -213,7 +242,9 @@ export default defineComponent({
       storesWithInventory: [] as any,
       selectedFacility: {} as any,
       updatedAddress: {} as any,
-      selectedItemsByFacility: {} as any
+      selectedItemsByFacility: {} as any,
+      isOrderUpdated: false,
+      cancelledItems: [] as any
     }
   },
   computed: {
@@ -242,9 +273,12 @@ export default defineComponent({
       this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
       this.fetchOrderFacilityChangeHistory()
-      this.customerAddress = await OrderService.fetchCustomerSavedAddress(this.order.id); 
+      this.customerAddress = this.order.shipGroup[0].shipTo?.postalAddress ? this.order.shipGroup[0].shipTo.postalAddress : {}
       await this.getPickupStores();
-      if(!this.nearbyStores.length) this.selectedSegment = "separate"
+      if(this.nearbyStores.length) {
+        this.selectedSegment = "separate";
+        this.checkForOutOfStockItems(this.order.shipGroup[0])
+      } 
     }
   },
   methods: {
@@ -290,6 +324,7 @@ export default defineComponent({
           })
           if (productIds.length) await this.fetchProducts([...productIds])
           await this.store.dispatch("user/getConfiguration", { productStoreId: order.productStoreId, token: this.token});
+          console.log('updated', order);
           this.order = order;
           if (productIds.size) await this.fetchProducts([...productIds])
         }
@@ -305,7 +340,9 @@ export default defineComponent({
           entityName: "OrderFacilityChange",
           inputFields: {
             orderId: this.order.id,
-            orderItemSeqId: this.order.shipGroup[0].items[0].itemSeqId
+            orderItemSeqId: this.order.shipGroup[0].items[0].itemSeqId,
+            facilityId: "UNFILLABLE_PARKING",
+            facilityId_op: "notEqual"
           },
           viewSize: 2,
           orderBy: "changeDatetime ASC"
@@ -393,6 +430,25 @@ export default defineComponent({
     updateDeliveryMethod(event: any, shipGroup: any) {
       const group = this.order.shipGroup.find((group: any) => group.shipGroupSeqId === shipGroup.shipGroupSeqId);
       group.selectedShipmentMethodTypeId = event.detail.value;
+      if(event.detail.value === "STOREPICKUP") this.updatedAddress = {};
+    },
+
+    revertCancellation(item: any) {
+      item.isItemCancelled = false;
+      if(!item.isOutOfStock) {
+        this.cancelledItems = this.cancelledItems.filter((currentItem: any) => currentItem.itemSeqId !== item.itemSeqId)
+      }
+    },
+
+    checkForOutOfStockItems(shipGroup: any) {
+      shipGroup.items.map((item: any) => {
+        const isInventoryAvailable = this.storesWithInventory.some((store: any) => store.productId === item.productId && Number(store.atp) > 0)
+
+        if(isInventoryAvailable) {
+          item.isOutOfStock = true;
+          this.cancelledItems.push(item);
+        }
+      })
     },
 
     async updatePickupLocation(isPickupForAll: boolean, selectedFacilityId: any, item?: any) {
@@ -413,17 +469,76 @@ export default defineComponent({
         const selectedFacilityId = result.data.selectedFacilityId;
 
         if (selectedFacilityId) {
-          if(isPickupForAll) {
-            this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === selectedFacilityId);
+          if(selectedFacilityId === "cancel") {
+            item.isItemCancelled = true;
+            this.cancelledItems.push(item);         
           } else {
-            item.selectedFacilityId = selectedFacilityId
-            if(this.selectedItemsByFacility[selectedFacilityId]?.length) this.selectedItemsByFacility[selectedFacilityId].push(item);
-            else this.selectedItemsByFacility[selectedFacilityId] = [item]
+            if(isPickupForAll) {
+              this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === selectedFacilityId);
+            } else {
+              item.selectedFacilityId = selectedFacilityId
+              if(this.selectedItemsByFacility[selectedFacilityId]?.length) this.selectedItemsByFacility[selectedFacilityId].push(item);
+              else this.selectedItemsByFacility[selectedFacilityId] = [item]
+            }
           }
         }
       });
 
       return modal.present();
+    },
+
+    async cancelShipGroup(shipGroup: any, cancelAllOrderItem: boolean) {
+      let resp
+      const itemReasonMap = {} as any
+
+      if(cancelAllOrderItem) {
+        shipGroup.items.map((item: any) => itemReasonMap[item.itemSeqId] = 'OICR_CHANGE_MIND')
+      } else {
+        shipGroup.items.map((item: any) => {
+          if(item.isItemCancelled) itemReasonMap[item.itemSeqId] = 'OICR_CHANGE_MIND'
+        })
+      }
+
+      const payload = {
+        "orderId": this.order.id,
+        "shipGroupSeqId": shipGroup.shipGroupSeqId,
+        "itemReasonMap": itemReasonMap,
+        "token": this.token
+      } as any
+
+      try {
+        resp = await OrderService.cancelOrderItem(payload);
+        if (resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
+          shipGroup.isCancelled = true;
+          showToast(translate("Order cancelled successfully"))
+        } else {
+          showToast(translate("Failed to cancel the order"))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Failed~ to cancel the order"))
+      }
+      this.getOrder();
+    },
+
+    async cancelOrder(shipGroup: any) {
+      const message = translate("Are you sure you want to cancel the order items?");
+      const alert = await alertController.create({
+        header: translate("Cancel items"),
+        message,
+        buttons: [
+          {
+            text: translate("Don't Cancel"),
+          },
+          {
+            text: translate("Cancel"),
+            handler: () => {
+              this.cancelShipGroup(shipGroup, true);
+            }
+          }
+        ],
+      });
+      return alert.present();
     },
 
     async updateDeliveryAddress(shipGroup: any) {
@@ -443,6 +558,121 @@ export default defineComponent({
       });
 
       return modal.present();
+    },
+
+    async confirmSave(shipGroup: any) {
+      const message = translate("Are you sure you want to save the changes?");
+      const alert = await alertController.create({
+        header: translate("Save changes"),
+        message,
+        buttons: [
+          {
+            text: translate("Cancel"),
+          },
+          {
+            text: translate("Confirm"),
+            handler: () => {
+              this.saveOrder(shipGroup)
+            }
+          }
+        ],
+      });
+      return alert.present();
+    },
+
+    async saveOrder(shipGroup: any) {
+      if(this.selectedSegment === "together") {
+        if(shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP") {
+          await this.updatePickupFacility(shipGroup);
+        } else {
+          await this.updateShippingAddress(shipGroup);
+        }
+      } else {
+        await this.cancelShipGroup(shipGroup, false);
+
+        const itemsWithFacility = shipGroup.items.filter((item: any) => item.selectedFacilityId)
+        const responses = await Promise.allSettled(itemsWithFacility.map(async(item: any) => await OrderService.releaseOrderItem({
+          orderId: this.order.id,
+          orderItemSeqId: item.itemSeqId,
+          fromFacilityId: this.order.facilityId,
+          changeReasonEnumId: "BROKERED",
+          toFacilityId: item.selectedFacilityId
+        })))
+
+        if(shipGroup.selectedShipmentMethodTypeId !== "STOREPICKUP" && this.updatedAddress.address1) {
+          const facilitiesForShipping = shipGroup.items.filter((item: any) => !(item.selectedFacilityId || item.isOutOfStock));
+        }
+
+        const hasFailedResponse = responses.some((response: any) => response.status === 'rejected')
+        if(hasFailedResponse) {
+          showToast(translate("Failed to reroute some items."))
+        } else {
+          showToast(translate("Order items re-routed successfully."))
+        } 
+      }
+      this.getOrder();
+    },
+
+    async updatePickupFacility(shipGroup: any) {
+      let resp
+      const payload = {
+        "orderId": this.order.id,
+        "shipGroupSeqId": shipGroup.shipGroupSeqId,
+        "contactMechId": shipGroup.shipTo.postalAddress.id,
+        "shipmentMethod": "STOREPICKUP@_NA_@CARRIER", // TODO Check why CARRIER is needed
+        "contactMechPurposeTypeId": "SHIPPING_LOCATION",
+        "facilityId": this.selectedFacility.facilityId,
+        "token": this.token
+      }
+
+      try {
+        resp = await OrderService.updatePickupFacility(payload);
+        if (resp.status === 200 && !hasError(resp)) {
+          shipGroup.facilityId = this.selectedFacility.facilityId
+          showToast(translate("Changes saved"))
+          this.isOrderUpdated = true
+        } else {
+          showToast(translate("Failed to update the pickup store"))
+        }
+      } catch(error) {
+        console.error(error)
+        showToast(translate("Failed to update the pickup store"))
+      }
+    },
+
+    async updateShippingAddress(shipGroup: any) {
+      let resp
+      console.log(this.updatedAddress);
+
+      const payload = {
+        "orderId": this.order.id,
+        "shipGroupSeqId": shipGroup.shipGroupSeqId,
+        "shipmentMethod": `${this.deliveryMethod}@_NA_`,
+        "contactMechPurposeTypeId": "SHIPPING_LOCATION",
+        "facilityId": shipGroup.facilityId,
+        "toName": `${this.updatedAddress.firstName} ${this.updatedAddress.lastName}`,
+        "address1": this.updatedAddress.address1,
+        "city": this.updatedAddress.city,
+        "stateProvinceGeoId": this.updatedAddress.stateProvinceGeoId,
+        "postalCode": this.updatedAddress.postalCode,
+        "countryGeoId": this.updatedAddress.countryGeoId,
+        "token": this.token
+      } as any
+
+      try {
+        resp = await OrderService.updateShippingAddress(payload);
+        if(!hasError(resp)) {
+          shipGroup.shipTo.postalAddress = this.updatedAddress
+          this.updatedAddress = null
+          showToast(translate("Changes saved"))
+          this.isOrderUpdated = true
+        } else {
+          showToast(translate("Failed to update the shipping addess"))
+        }
+      } catch (error) {
+        console.error(error)
+        showToast(translate("Failed to update the shipping addess"))
+      }
     },
 
     async checkInventory(facilityIds: Array<string>, productIds: Array<string>) {
@@ -509,9 +739,11 @@ export default defineComponent({
     const store = useStore();
     return {
       Actions,
+      closeCircleOutline,
       addOutline,
       hasPermission,
       colorWandOutline,
+      medkitOutline,
       removeCircleOutline,
       router,
       store,
@@ -534,5 +766,9 @@ export default defineComponent({
     display: flex;
     justify-content: space-between;
     border-top: 1px solid var(--ion-color-light);
+  }
+
+  .overline {
+    color: red;
   }
 </style>
