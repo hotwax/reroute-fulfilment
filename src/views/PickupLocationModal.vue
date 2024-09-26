@@ -28,7 +28,7 @@
       </ion-accordion-group>
 
       <ion-radio-group v-model="selectedFacilityIdValue">
-        <ion-item lines="none">
+        <ion-item lines="none" v-if="!isPickupForAll">
           <ion-radio label-placement="end" value="cancel">
             <ion-label>{{ translate("Request cancelation") }}</ion-label>
           </ion-radio>

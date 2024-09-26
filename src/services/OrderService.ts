@@ -44,45 +44,28 @@ const getProductStoreSetting = async (payload: any): Promise<any> => {
   });
 }
 
-const fetchOrderFacilityChangeHistory = async (payload: any): Promise<any> => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
- 
- 
-  return client({
-    url: "performFind",
-    method: "POST",
-    data: payload,
-    baseURL,
-    headers: {
-      Authorization: 'Bearer ' + process.env.VUE_APP_BASE,
-      'Content-Type': 'application/json'
-    }
-  })
+const getRerouteOrderBrokeringHistory = async (payload: any): Promise<any> => {
+  return api({
+    url: "getRerouteOrderBrokeringHistory",
+    method: "post",
+    data: payload
+  });
 }
 
-const releaseOrderItem = async (payload: any): Promise<any> => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
-
-  return client({
-    url: "releaseOrderItem",
-    method: "POST",
-    data: payload,
-    baseURL,
-    headers: {
-      Authorization: 'Bearer ' + process.env.VUE_APP_BASE,
-      'Content-Type': 'application/json'
-    }
+const releaseRerouteOrderItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "releaseRerouteOrderItem",
+    method: "post",
+    data: payload
   });
-} 
+}
 
 export const OrderService = {
-  fetchOrderFacilityChangeHistory,
   getOrder,
+  getRerouteOrderBrokeringHistory,
   updateShippingAddress,
   updatePickupFacility,
   cancelOrderItem,
   getProductStoreSetting,
-  releaseOrderItem
+  releaseRerouteOrderItem
 }
