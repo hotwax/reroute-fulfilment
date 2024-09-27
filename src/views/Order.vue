@@ -27,8 +27,8 @@
               </ion-select>
             </ion-item>
 
-            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
-              <ion-segment v-if="isSplitEnabled && nearbyStores.length" @ionChange="segmentChanged($event, order.shipGroup)" v-model="selectedSegment">
+            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && isSplitEnabled">
+              <ion-segment v-if="nearbyStores.length" @ionChange="segmentChanged($event, order.shipGroup)" v-model="selectedSegment">
                 <ion-segment-button value="together">
                   <ion-label>{{ translate("Together") }}</ion-label>
                 </ion-segment-button>
@@ -442,6 +442,7 @@ export default defineComponent({
     updateDeliveryMethod(event: any, shipGroup: any) {
       shipGroup.selectedShipmentMethodTypeId = event.detail.value;
       if(event.detail.value === "STOREPICKUP") this.updatedAddress = {};
+      else this.selectedFacility = {}
     },
 
     checkForOutOfStockItems(shipGroup: any) {

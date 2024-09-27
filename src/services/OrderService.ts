@@ -1,10 +1,6 @@
-import { api, client } from '@/adapter';
-import store from '@/store';
-import { hasError } from '@hotwax/oms-api';
+import { api } from '@/adapter';
 
 const getOrder = async (payload: any): Promise <any>  => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
   return api({
     url: "getRerouteOrder",
     method: "post",
