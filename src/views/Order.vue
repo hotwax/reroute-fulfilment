@@ -2,6 +2,9 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <main>
+        <ion-thumbnail>
+          <img src="../assets/images/gorjana-logo.svg" />
+        </ion-thumbnail>
         <div v-if="Object.keys(order).length">
           <ion-item class="ion-text-center" lines="none">
             <h1>{{ $t("Your Order") }}</h1>
@@ -463,6 +466,15 @@ export default defineComponent({
 </script>
 
 <style scoped>
+  ion-thumbnail {
+    --size: 120px;
+    margin: auto;
+  }
+
+  main {
+    background-image: url("@/assets/images/gorjana-logo.svg");
+  }
+
   @media (min-width: 700px) {
     main {
       max-width: 400px;
