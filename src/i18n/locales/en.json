@@ -32,6 +32,7 @@
   "Logout": "Logout",
   "miles": "miles",
   "Nearby Stores": "Nearby Stores",
+  "No stores found": "No stores found",
   "OMS": "OMS",
   "Order ID": "Order ID",
   "Order cancelled successfully": "Order cancelled successfully",
@@ -42,6 +43,7 @@
   "Please fill all the fields": "Please fill all the fields",
   "Save changes": "Save changes",
   "Save shipping address": "Save shipping address",
+  "Search for a postal code to check for pickup stores": "Search for a postal code to check for pickup stores",
   "Search Zip Code": "Search Zip Code",
   "Select Pickup Location": "Select Pickup Location",
   "Shipping Address": "Shipping Address",
@@ -53,5 +55,6 @@
   "Tracking code": "Tracking code",
   "Username": "Username",
   "Your Order": "Your Order",
-  "Zip Code": "Zip Code"
+  "Zip Code": "Zip Code",
+  "Zip code not found or invalid": "Zip code not found or invalid"
 }

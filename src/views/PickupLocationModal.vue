@@ -51,7 +51,11 @@
       <ion-button class="ion-margin" type="submit" expand="block">{{ $t("Find Stores") }}</ion-button>
     </form>
 
-    <ion-list v-if="nearbyStores.length">
+    <ion-item v-if="isLoadingStores" lines="none">
+      <ion-spinner slot="start" color="medium" name="crescent"/>
+      <ion-label>{{ $t("Fetching stores.") }}</ion-label>
+    </ion-item>
+    <ion-list v-else-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby Stores") }}</ion-label>
       </ion-list-header>
@@ -70,8 +74,8 @@
         </ion-item>
       </ion-radio-group>
     </ion-list>
-    <ion-item v-else-if="!isLoadingStores" lines="none" class="ion-text-center">
-      <ion-label>{{ $t("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
+    <ion-item v-else-if="errorMessage" lines="none" class="ion-text-center">
+      <ion-label>{{ $t(errorMessage) }}</ion-label>
     </ion-item>
 
     <ion-fab v-if="nearbyStores.length" vertical="bottom" horizontal="end" slot="fixed">
@@ -101,9 +105,9 @@ import {
   IonRadio,
   IonRadioGroup,
   IonSearchbar,
+  IonSpinner,
   IonTitle,
   IonToolbar,
-  loadingController,
   modalController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
@@ -135,6 +139,7 @@ export default defineComponent({
     IonRadio,
     IonRadioGroup,
     IonSearchbar,
+    IonSpinner,
     IonTitle,
     IonToolbar
   },
@@ -146,7 +151,8 @@ export default defineComponent({
       selectedFacility: {},
       isSearchingEnabled: false,
       queryString: "",
-      isLoadingStores: false
+      isLoadingStores: false,
+      errorMessage: ""
     }
   },
   props: ["shipGroup", "storePickupRejectedFacility"],
@@ -157,26 +163,10 @@ export default defineComponent({
       this.isSearchingEnabled = true
     }
 
-    await this.presentLoader()
     await this.getPickupStores()
-    this.dismissLoader()
     this.isLoadingStores = false
   },
   methods: {
-    async presentLoader() {
-      this.loader = await loadingController
-        .create({
-          message: this.$t("Fetching stores."),
-          translucent: true,
-        });
-      await this.loader.present();
-    },
-    dismissLoader() {
-      if (this.loader) {
-        this.loader.dismiss();
-        this.loader = null;
-      }
-    },
     async getStores(point?: string) {
       let payload = {
         "viewSize": process.env.VUE_APP_VIEW_SIZE,
@@ -276,23 +266,33 @@ export default defineComponent({
           stores = await this.getStores(this.storePickupRejectedFacility ? this.storePickupRejectedFacility?.latlon : '')
         } else {
           const location = await this.getDeliveryAddressGeoLocation(this.shipGroup.shipTo.postalAddress.postalCode)
-          if (!location) return;
+          if (!location) {
+            this.errorMessage = "Zip code not found or invalid"
+            return;
+          }
           stores = await this.getStores(location)
         }
 
-        if (!stores?.length) return;
+        if (!stores?.length) {
+          this.errorMessage = "No stores found"
+          return;
+        }
 
         const facilityIds = stores.map((store: any) => store.storeCode)
         const productIds = [...new Set(this.shipGroup.items.map((item: any) => item.productId))] as any;
         const storesWithInventory = await this.checkInventory(facilityIds, productIds)
 
-        if (!storesWithInventory?.length) return;
+        if (!storesWithInventory?.length) {
+          this.errorMessage = "Inventory not available at any nearby store, please select alternate delivery method"
+          return;
+        }
 
         stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
           if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: this.getStoreDistance(storeData) });
         });
       } catch (error) {
+        this.errorMessage = "No stores found"
         console.error(error)
       }
     },
@@ -307,6 +307,7 @@ export default defineComponent({
 
     async searchStores() {
       if(!this.queryString.trim().length) {
+        this.errorMessage = "Search for a postal code to check for pickup stores"
         return;
       }
 
@@ -317,6 +318,7 @@ export default defineComponent({
       const location = await this.getDeliveryAddressGeoLocation(this.queryString.trim())
       if (!location) {
         this.isLoadingStores = false;
+        this.errorMessage = "Zip code not found or invalid"
         return;
       }
 
@@ -324,6 +326,7 @@ export default defineComponent({
 
       if (!stores?.length) {
         this.isLoadingStores = false;
+        this.errorMessage = "No stores found"
         return;
       }
 
@@ -333,6 +336,7 @@ export default defineComponent({
 
       if (!storesWithInventory?.length) {
         this.isLoadingStores = false;
+        this.errorMessage = "Inventory not available at any nearby store, please select alternate delivery method"
         return;
       }
 
