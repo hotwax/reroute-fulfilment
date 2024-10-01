@@ -149,11 +149,23 @@ export default defineComponent({
       nearbyStores: [] as any,
       facilityId: '',
       selectedFacility: {},
-      isSearchingEnabled: false,
+      isSearchingEnabled: false,  // displays searchbar on the UI
       queryString: "",
-      isLoadingStores: false,
+      isLoadingStores: false,   // displays spinner on UI
       errorMessage: ""
     }
+  },
+  watch: {
+    queryString: {
+      async handler() {
+        if (!this.queryString.trim().length) {
+          this.isLoadingStores = true;
+          this.nearbyStores = [];
+          await this.getPickupStores()
+          this.isLoadingStores = false;
+        }
+      },
+    },
   },
   props: ["shipGroup", "storePickupRejectedFacility"],
   async mounted() {
