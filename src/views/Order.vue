@@ -2,7 +2,7 @@
   <ion-page>
     <ion-content :fullscreen="true">
       <main>
-        <ion-thumbnail>
+        <ion-thumbnail class="brand-logo">
           <img src="../assets/images/gorjana-logo.svg" />
         </ion-thumbnail>
         <div v-if="Object.keys(order).length">
@@ -39,17 +39,18 @@
                 </ion-label>
               </ion-item> -->
               <ion-item>
-                <ion-select :label="$t('Delivery method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
+                <ion-select :label="$t('Delivery Method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
                   <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
                 </ion-select>
               </ion-item>
               <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
-              <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline" class="ion-padding">{{ $t("Select pickup location")}}</ion-button>
+              <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline" class="ion-padding">{{ $t("Select Pickup Location")}}</ion-button>
               <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
                 <ion-list>
                   <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
                   <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.city }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
+                  <ion-label color="dark">{{ shipGroup.selectedFacility.address2 }} </ion-label>
+                  <ion-label color="dark">{{ shipGroup.selectedFacility.city }}{{ shipGroup.selectedFacility.city && ',' }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
                 </ion-list>
                 <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
               </ion-item>
@@ -57,12 +58,14 @@
                 <ion-list v-if="shipGroup.updatedAddress">
                   <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
                   <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.city }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
+                  <ion-label color="dark">{{ shipGroup.updatedAddress.address2 }} </ion-label>
+                  <ion-label color="dark">{{ shipGroup.updatedAddress.city }}{{ shipGroup.updatedAddress.city && ',' }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
                 </ion-list>
                 <ion-list v-else-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
                   <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
                   <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
+                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address2 }} </ion-label>
+                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }}{{ shipGroup.shipTo.postalAddress.city && ',' }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
                 </ion-list>
                 <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
               </ion-item>
@@ -124,6 +127,7 @@ import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "@/views/PickupLocationModal.vue";
 import { Actions, hasPermission } from '@/authorization'
 import { initialise } from '@/adapter'
+import { FacilityService } from "@/services/FacilityService";
 
 export default defineComponent({
   name: "Order",
@@ -149,15 +153,17 @@ export default defineComponent({
       products: {} as any,
       deliveryMethods: [
         {
-          name: 'Store pickup',
+          name: 'In-Store Pickup',
           value: 'STOREPICKUP'
         },
         {
-          name: 'Shipping',
+          name: 'Ship To Me',
           value: 'STANDARD'
         }
       ],
-      isOrderUpdated: false
+      isOrderUpdated: false,
+      originFacilityId: "",
+      originFacilityLocation: ""
     }
   },
   computed: {
@@ -274,6 +280,7 @@ export default defineComponent({
         "facilityId": shipGroup.facilityId,
         "toName": `${shipGroup.updatedAddress.firstName} ${shipGroup.updatedAddress.lastName}`,
         "address1": shipGroup.updatedAddress.address1,
+        "address2": shipGroup.updatedAddress.address2,
         "city": shipGroup.updatedAddress.city,
         "stateProvinceGeoId": shipGroup.updatedAddress.stateProvinceGeoId,
         "postalCode": shipGroup.updatedAddress.postalCode,
@@ -359,8 +366,48 @@ export default defineComponent({
       });
       return modal.present();
     },
+    async fetchOrderFacilityChangeHistory() {
+      try {
+        let resp = await OrderService.getRerouteOrderBrokeringHistory({ "token": this.token })
 
+        if(!hasError(resp) && resp.data?.brokeringHistory.length) {
+          const oldestBrokeringHistory = resp.data.brokeringHistory.reduce((oldest: any, current: any) => current.changeDatetime > oldest.changeDatetime ? current : oldest);
+
+          this.originFacilityId = oldestBrokeringHistory.facilityId;
+        } else {
+          throw resp.data;
+        }
+      } catch(error: any) {
+        console.error(error);
+      }
+    },
+    async getStoreByFacilityId(facilityId: string) {
+      let facility = {};
+      let payload = {
+        "viewSize": process.env.VUE_APP_VIEW_SIZE,
+        "filters": [`storeCode: ${facilityId}`, "pickup_pref: true"]
+      } as any
+
+      try {
+        const storeLookupResp = await FacilityService.getStores(payload)
+        if (hasError(storeLookupResp) || !storeLookupResp.data.response.numFound) {
+          return facility;
+        }
+        facility = storeLookupResp.data.response.docs[0]
+      } catch (error) {
+        console.error(error)
+      }
+      return facility;
+    },
     async updatePickupLocation(shipGroup: any) {
+      // If we already have the facility location for the last brokered facility then do not fetch the same information again
+      if(!this.originFacilityLocation) {
+        // Fetch the last facilityId from where the order was rejected
+        await this.fetchOrderFacilityChangeHistory();
+        const facility: any = await this.getStoreByFacilityId(this.originFacilityId);
+        this.originFacilityLocation = facility.latlon ? facility.latlon : ""
+      }
+
       const modal = await modalController
         .create({
           component: PickupLocationModal,
@@ -368,7 +415,8 @@ export default defineComponent({
           // backrop.role returns 'backdrop' giving unexpected result
           backdropDismiss: false,
           componentProps: {
-            shipGroup
+            shipGroup,
+            storePickupRejectedFacilityLocation: this.originFacilityLocation
           }
         })
       modal.onDidDismiss().then((result) => {
@@ -466,13 +514,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
-  ion-thumbnail {
-    --size: 120px;
-    margin: auto;
+  ion-thumbnail.brand-logo {
+    height: 100px;
+    width: 100%;
+    margin: 10px;
   }
 
-  main {
-    background-image: url("@/assets/images/gorjana-logo.svg");
+  .ion-page {
+    background-image: url("@/assets/images/background.jpg");
   }
 
   @media (min-width: 700px) {
