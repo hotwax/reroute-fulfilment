@@ -527,8 +527,15 @@ export default defineComponent({
   }
 
   main {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
     background: white;
     padding: 20px;
+  }
+
+  ion-item > h1 {
+    width: 100%;
   }
 
   @media (min-width: 700px) {
