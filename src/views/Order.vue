@@ -3,7 +3,7 @@
     <ion-content :fullscreen="true">
       <main>
         <ion-thumbnail class="brand-logo">
-          <img src="../assets/images/gorjana-logo.svg" />
+          <img src="../assets/images/brand-logo.svg" />
         </ion-thumbnail>
         <div v-if="Object.keys(order).length">
           <ion-item class="ion-text-center" lines="none">
