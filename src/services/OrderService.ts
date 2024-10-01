@@ -43,8 +43,17 @@ const getProductStoreSetting = async (payload: any): Promise<any> => {
   });
 }
 
+const getRerouteOrderBrokeringHistory = async (payload: any): Promise<any> => {
+  return api({
+    url: "getRerouteOrderBrokeringHistory",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrder,
+  getRerouteOrderBrokeringHistory,
   updateShippingAddress,
   updatePickupFacility,
   cancelOrderItem,
