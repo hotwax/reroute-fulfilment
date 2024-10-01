@@ -64,9 +64,9 @@
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby Stores") }}</ion-label>
       </ion-list-header>
-      <ion-radio-group v-model="selectedFacility">
+      <ion-radio-group :value="selectedFacility?.facilityId" @ionChange="updatePickupStore($event)">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
-          <ion-radio :value="store" label-placement="end">
+          <ion-radio :value="store.facilityId" label-placement="end">
             <ion-label>
               {{ store.facilityName }}
               <p>{{ store.address1 }}</p>
@@ -84,7 +84,7 @@
     </ion-item>
 
     <ion-fab v-if="nearbyStores.length" vertical="bottom" horizontal="end" slot="fixed">
-      <ion-fab-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId" @click="updateFacility()">
+      <ion-fab-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility?.facilityId == shipGroupSelectedFacility?.facilityId" @click="updateFacility()">
         <ion-icon :icon="saveOutline" />
       </ion-fab-button>
     </ion-fab>
@@ -151,7 +151,7 @@ export default defineComponent({
       loader: null as any,
       nearbyStores: [] as any,
       facilityId: '',
-      selectedFacility: {},
+      selectedFacility: {} as any,
       isSearchingEnabled: false,  // displays searchbar on the UI
       queryString: "",
       isLoadingStores: false,   // displays spinner on UI
@@ -170,12 +170,16 @@ export default defineComponent({
       },
     },
   },
-  props: ["shipGroup", "storePickupRejectedFacility"],
+  props: ["shipGroup", "storePickupRejectedFacility", "shipGroupSelectedFacility"],
   async mounted() {
     this.isLoadingStores = true
 
     if(!this.storePickupRejectedFacility?.storeCode) {
       this.isSearchingEnabled = true
+    }
+
+    if(this.shipGroupSelectedFacility?.facilityId) {
+      this.selectedFacility = JSON.parse(JSON.stringify(this.shipGroupSelectedFacility))
     }
 
     await this.getPickupStores()
@@ -364,6 +368,11 @@ export default defineComponent({
       });
 
       this.isLoadingStores = false;
+    },
+
+    updatePickupStore(event: any) {
+      const facilityId = event.detail.value;
+      this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === facilityId);
     }
   },
   setup() {

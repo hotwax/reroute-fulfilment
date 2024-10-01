@@ -416,7 +416,8 @@ export default defineComponent({
           backdropDismiss: false,
           componentProps: {
             shipGroup,
-            storePickupRejectedFacility: this.lastRejectedFacility
+            storePickupRejectedFacility: this.lastRejectedFacility,
+            shipGroupSelectedFacility: shipGroup.selectedFacility
           }
         })
       modal.onDidDismiss().then((result) => {
