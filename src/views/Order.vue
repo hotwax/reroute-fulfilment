@@ -13,75 +13,76 @@
             <ion-item lines="none" class="border">
               <ion-label>
                 {{ order.customerName }}
-                <p>{{ order.id }}</p>
+                <p>{{ order.orderName }}</p>
               </ion-label>
               <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
             </ion-item>
           </ion-card>
           <div v-if="order.statusId !== 'ORDER_CANCELLED' && order.shipGroup.length > 0" >
-            <ion-card v-for="(shipGroup, index) of order.shipGroup" :key="index">
-              <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="full">
-                <ion-thumbnail slot="start">
-                  <Image :src='getProduct(item.productId).mainImageUrl' />
-                </ion-thumbnail>
-                <ion-label slot="start">
-                  <p>{{ item.brandName }}</p>
-                  <h2>{{ item.name }}</h2>
-                  <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
-                    <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
-                  </p>
-                </ion-label>
-              </ion-item>
-              <!-- TODO -->
-              <!-- <ion-item>
-                <ion-label>
-                  status description
-                </ion-label>
-              </ion-item> -->
-              <ion-item>
-                <ion-select :label="$t('Delivery Method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
-                  <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
-                </ion-select>
-              </ion-item>
-              <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
-              <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline" class="ion-padding">{{ $t("Select Pickup Location")}}</ion-button>
-              <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
-                <ion-list>
-                  <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.address2 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.selectedFacility.city }}{{ shipGroup.selectedFacility.city && ',' }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
-                </ion-list>
-                <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
-              </ion-item>
-              <ion-item v-else>
-                <ion-list v-if="shipGroup.updatedAddress">
-                  <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.address2 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.updatedAddress.city }}{{ shipGroup.updatedAddress.city && ',' }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
-                </ion-list>
-                <ion-list v-else-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
-                  <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address2 }} </ion-label>
-                  <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }}{{ shipGroup.shipTo.postalAddress.city && ',' }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
-                </ion-list>
-                <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
-              </ion-item>
-              <!-- TODO -->
-              <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
-                <ion-label>{{ $t("Estimated delivery") }}</ion-label>
-                <ion-label slot="end">{{ $t("03/03/2023") }}</ion-label>
-              </ion-item> -->
-              <ion-item v-if="shipGroup.trackingNumber">
-                <ion-label>{{ $t('Tracking code') }}</ion-label>
-                <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
-              </ion-item>
+            <div v-for="(shipGroup, index) of order.shipGroup" :key="index">
+              <ion-card>
+                <ion-item v-show="item.status !== 'ITEM_CANCELLED'" v-for="item of shipGroup.items" :key="item.id" lines="none">
+                  <ion-thumbnail slot="start">
+                    <Image :src='getProduct(item.productId).mainImageUrl' />
+                  </ion-thumbnail>
+                  <ion-label>
+                    <h2>{{ getProduct(item.productId).parentProductName || getProduct(item.productId).productName }}</h2>
+                    <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
+                      <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
+                    </p>
+                  </ion-label>
+                </ion-item>
+                <!-- TODO -->
+                <!-- <ion-item>
+                  <ion-label>
+                    status description
+                  </ion-label>
+                </ion-item> -->
+                <ion-item>
+                  <ion-select :label="$t('Delivery Method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
+                    <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+                <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline" class="ion-margin">{{ $t("Add address") }}</ion-button>
+                <ion-button v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && !shipGroup.selectedFacility" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" @click="updatePickupLocation(shipGroup)" expand="block" fill="outline" class="ion-margin">{{ $t("Select Pickup Location")}}</ion-button>
+                <ion-item v-else-if="shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP'">
+                  <ion-list>
+                    <ion-label>{{ shipGroup.selectedFacility.facilityName }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.selectedFacility.address1 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.selectedFacility.address2 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.selectedFacility.city }}{{ shipGroup.selectedFacility.city && ',' }} {{ shipGroup.selectedFacility.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.selectedFacility.postalCode }}</ion-label>
+                  </ion-list>
+                  <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE) && shipGroup.shipmentMethodTypeId === 'STOREPICKUP'" slot="end" @click="updatePickupLocation(shipGroup)" color="medium" fill="outline">{{ $t("Change Store")}}</ion-button>
+                </ion-item>
+                <ion-item v-else>
+                  <ion-list v-if="shipGroup.updatedAddress">
+                    <ion-label>{{ shipGroup.updatedAddress.firstName }} {{ shipGroup.updatedAddress.lastName }}</ion-label>
+                    <ion-label color="dark">{{ shipGroup.updatedAddress.address1 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.updatedAddress.address2 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.updatedAddress.city }}{{ shipGroup.updatedAddress.city && ',' }} {{ shipGroup.updatedAddress.stateCode }} {{ shipGroup.updatedAddress.postalCode }}</ion-label>
+                  </ion-list>
+                  <ion-list v-else-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
+                    <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
+                    <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address2 }} </ion-label>
+                    <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }}{{ shipGroup.shipTo.postalAddress.city && ',' }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
+                  </ion-list>
+                  <ion-button :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP' || shipGroup.updatedAddress" slot="end" @click="updateDeliveryAddress(shipGroup)" color="medium" fill="outline">{{ $t("Edit address") }}</ion-button>
+                </ion-item>
+                <!-- TODO -->
+                <!-- <ion-item v-if="shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" lines="none">
+                  <ion-label>{{ $t("Estimated delivery") }}</ion-label>
+                  <ion-label slot="end">{{ $t("03/03/2023") }}</ion-label>
+                </ion-item> -->
+                <ion-item v-if="shipGroup.trackingNumber">
+                  <ion-label>{{ $t('Tracking code') }}</ion-label>
+                  <ion-note slot="end">{{ shipGroup.trackingNumber }}</ion-note>
+                </ion-item>
+              </ion-card>
               <!-- Disabling the buttons if address or facility is not added -->
-              <ion-button :disabled="(!shipGroup.updatedAddress && (!shipGroup.selectedFacility || shipGroup.selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)" fill="clear">{{ $t("Save changes") }}</ion-button>
-              <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="clear" color="danger">{{ $t("Cancel") }}</ion-button>
-            </ion-card>
+              <ion-button class="ion-margin" expand="block" :disabled="(!shipGroup.updatedAddress && (!shipGroup.selectedFacility || shipGroup.selectedFacility.facilityId == shipGroup.facilityId))" @click="save(shipGroup)">{{ $t("Save changes") }}</ion-button>
+              <ion-button class="ion-margin" expand="block" v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancel(shipGroup)" fill="outline" color="danger">{{ $t("Cancel") }}</ion-button>
+            </div>
           </div>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
             <ion-label>{{ $t("An email will be sent to you when your item(s) are ready to collect at the new requested location(s).") }}</ion-label>
@@ -516,8 +517,8 @@ export default defineComponent({
 <style scoped>
   ion-thumbnail.brand-logo {
     height: 100px;
-    width: 100%;
-    margin: 10px;
+    width: 90%;
+    margin: auto;
   }
 
   ion-content {
@@ -528,6 +529,7 @@ export default defineComponent({
 
   main {
     background: white;
+    padding: 20px;
   }
 
   @media (min-width: 700px) {
