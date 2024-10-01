@@ -520,8 +520,14 @@ export default defineComponent({
     margin: 10px;
   }
 
-  .ion-page {
+  ion-content {
     background-image: url("@/assets/images/background.jpg");
+    background-size: cover;
+    --background: transparent;
+  }
+
+  main {
+    background: white;
   }
 
   @media (min-width: 700px) {
