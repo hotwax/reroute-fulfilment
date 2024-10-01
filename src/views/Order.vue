@@ -303,11 +303,11 @@ export default defineComponent({
           showToast(translate("Changes saved"))
           this.isOrderUpdated = true
         } else {
-          showToast(translate("Failed to update the shipping addess"))
+          showToast(translate("Failed to update the shipping address"))
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Failed to update the shipping addess"))
+        showToast(translate("Failed to update the shipping address"))
       }
       this.getOrder();
     },
@@ -471,7 +471,7 @@ export default defineComponent({
         }
       } catch (error) {
         console.error(error)
-        showToast(translate("Failed~ to cancel the order"))
+        showToast(translate("Failed to cancel the order"))
       }
       this.getOrder();
     },
