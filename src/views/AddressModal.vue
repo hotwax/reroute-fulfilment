@@ -1,7 +1,7 @@
 <template>
   <ion-header>
     <ion-toolbar>
-      <ion-title>{{ $t("Shipping address") }}</ion-title>
+      <ion-title>{{ $t("Shipping Address") }}</ion-title>
       <ion-buttons slot="end" @click="close()">
         <ion-button>
           <ion-icon :icon="closeOutline" />
@@ -12,13 +12,16 @@
   <ion-content>
     <ion-list>
       <ion-item>
-        <ion-input :label="$t('First name')" class="ion-text-right" name="firstName" v-model="address.firstName" id="firstName" type="text"/>
+        <ion-input :label="$t('First Name')" class="ion-text-right" name="firstName" v-model="address.firstName" id="firstName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Last name')" class="ion-text-right" name="lastName" v-model="address.lastName" id="lastName" type="text"/>
+        <ion-input :label="$t('Last Name')" class="ion-text-right" name="lastName" v-model="address.lastName" id="lastName" type="text"/>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Street')" class="ion-text-right" name="street" v-model="address.address1" id="address1" type="text"/>
+        <ion-input :label="$t('Address')" class="ion-text-right" name="street" v-model="address.address1" id="address1" type="text"/>
+      </ion-item>
+      <ion-item>
+        <ion-input :label="$t('Apartment, Suite, etc.')" class="ion-text-right" name="street" v-model="address.address2" id="address2" type="text"/>
       </ion-item>
       <ion-item>
         <ion-input :label="$t('City')" class="ion-text-right" name="city" v-model="address.city" id="city" type="text"/>
@@ -29,7 +32,7 @@
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-input :label="$t('Zipcode')" class="ion-text-right" name="zipcode" v-model="address.postalCode" id="postalCode"/>
+        <ion-input :label="$t('Zip Code')" class="ion-text-right" name="zipcode" v-model="address.postalCode" id="postalCode"/>
       </ion-item>
     </ion-list>
     <div class="ion-text-center">
@@ -85,6 +88,7 @@ export default defineComponent({
         firstName: "",
         lastName: "",
         address1: "",
+        address2: "",
         city: "",
         stateProvinceGeoId: "",
         postalCode: "",
@@ -106,7 +110,7 @@ export default defineComponent({
     async updateAddress() {
       const hasEmptyValues = Object.keys(this.address).some((field: string) => {
         this.address[field] = this.address[field].trim();
-        return !this.address[field];
+        return !this.address[field] && field !== 'address2';
       })
       if (hasEmptyValues) return showToast(translate("Please fill all the fields"))
       const state = this.states.find((state: any) => state.geoId === this.address.stateProvinceGeoId);
@@ -122,6 +126,7 @@ export default defineComponent({
       }
 
       this.address.address1 = this.shipGroup.shipTo.postalAddress.address1
+      this.address.address2 = this.shipGroup.shipTo.postalAddress.address2
       this.address.city = this.shipGroup.shipTo.postalAddress.city
       this.address.postalCode = this.shipGroup.shipTo.postalAddress.postalCode
       this.address.stateProvinceGeoId = this.shipGroup.shipTo.postalAddress.stateProvinceGeoId
@@ -173,3 +178,11 @@ export default defineComponent({
   }
 });
 </script>
+
+<style>
+/* Removes the background color on autofill of input fields */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition: background-color 0s 600000s, color 0s 600000s !important;
+}
+</style>
