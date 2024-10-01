@@ -23,7 +23,7 @@
         </ion-list>
       </ion-item>
     </ion-card>
-    <ion-accordion-group v-else>
+    <ion-accordion-group v-else-if="!isSearchingEnabled">
       <ion-accordion value="rejectedFacility">
         <ion-item slot="header" color="light">
           <ion-icon slot="start" :icon="locationOutline"></ion-icon>
@@ -36,12 +36,21 @@
             <p>{{ storePickupRejectedFacility.address2 }}</p>
             <p>{{ storePickupRejectedFacility.city }}{{ storePickupRejectedFacility.city && storePickupRejectedFacility.state ? ", " : "" }}{{ storePickupRejectedFacility.state }} {{ storePickupRejectedFacility.postalCode }}</p>
           </ion-label>
-          <ion-button fill="clear" slot="end">
+          <ion-button fill="clear" slot="end" @click="enableSearching">
             {{ $t("Edit Zip Code") }}
           </ion-button>
         </ion-item>
       </ion-accordion>
     </ion-accordion-group>
+
+    <form
+      v-if="isSearchingEnabled"
+      @submit.prevent="searchStores()"
+    >
+      <ion-searchbar :placeholder="$t('Search Zip Code')" v-model="queryString" />
+      <ion-button class="ion-margin" type="submit" expand="block">{{ $t("Find Stores") }}</ion-button>
+    </form>
+
     <ion-list v-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby Stores") }}</ion-label>
@@ -61,13 +70,9 @@
         </ion-item>
       </ion-radio-group>
     </ion-list>
-    <ion-item v-else lines="none" class="ion-text-center">
+    <ion-item v-else-if="!isLoadingStores" lines="none" class="ion-text-center">
       <ion-label>{{ $t("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
     </ion-item>
-    <!-- Only show select button if there are stores to select from -->
-    <!-- <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select Pickup Location") }}</ion-button>
-    </div> -->
 
     <ion-fab v-if="nearbyStores.length" vertical="bottom" horizontal="end" slot="fixed">
       <ion-fab-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId" @click="updateFacility()">
@@ -95,6 +100,7 @@ import {
   IonListHeader,
   IonRadio,
   IonRadioGroup,
+  IonSearchbar,
   IonTitle,
   IonToolbar,
   loadingController,
@@ -128,6 +134,7 @@ export default defineComponent({
     IonLabel,
     IonRadio,
     IonRadioGroup,
+    IonSearchbar,
     IonTitle,
     IonToolbar
   },
@@ -137,14 +144,23 @@ export default defineComponent({
       nearbyStores: [] as any,
       facilityId: '',
       selectedFacility: {},
-      accordionValue: "rejectedFacility"
+      isSearchingEnabled: false,
+      queryString: "",
+      isLoadingStores: false
     }
   },
   props: ["shipGroup", "storePickupRejectedFacility"],
   async mounted() {
+    this.isLoadingStores = true
+
+    if(!this.storePickupRejectedFacility?.storeCode) {
+      this.isSearchingEnabled = true
+    }
+
     await this.presentLoader()
-    await this.getPickupStores();
+    await this.getPickupStores()
     this.dismissLoader()
+    this.isLoadingStores = false
   },
   methods: {
     async presentLoader() {
@@ -164,7 +180,7 @@ export default defineComponent({
     async getStores(point?: string) {
       let payload = {
         "viewSize": process.env.VUE_APP_VIEW_SIZE,
-        "filters": ["storeType: RETAIL_STORE", "pickup_pref: true"]
+        "filters": ["storeType: RETAIL_STORE OR WAREHOUSE", "pickup_pref: true"]
       } as any
 
       if (point) {
@@ -182,11 +198,18 @@ export default defineComponent({
       }
     },
 
-    async getDeliveryAddressGeoLocation() {
+    async getDeliveryAddressGeoLocation(postalCode?: string) {
+      if(!postalCode) {
+        return '';
+      }
+
+      const truncatedPostalcode = postalCode.replace(/^0+/, '');
+      const query = postalCode === truncatedPostalcode ? `postcode:${postalCode}` : `postcode:${postalCode} OR ${truncatedPostalcode}`;
+
       try {
         const shipGroupLocationResp = await UtilityService.getGeoLocation({
           "json": {
-            "query": `postcode: ${this.shipGroup.shipTo.postalAddress.postalCode}`
+            "query": query
           }
         })
 
@@ -196,6 +219,7 @@ export default defineComponent({
         return shipGroupLocationResp.data.response.docs[0].location
       } catch (error) {
         console.error(error)
+        return '';
       }
     },
 
@@ -238,6 +262,11 @@ export default defineComponent({
       : "";
     },
 
+    enableSearching() {
+      this.isSearchingEnabled = true
+      this.nearbyStores = []
+    },
+
     async getPickupStores() {
       try {
         let stores;
@@ -246,7 +275,7 @@ export default defineComponent({
           // have any facility hence, all the stores are fetched
           stores = await this.getStores(this.storePickupRejectedFacility ? this.storePickupRejectedFacility?.latlon : '')
         } else {
-          const location = await this.getDeliveryAddressGeoLocation()
+          const location = await this.getDeliveryAddressGeoLocation(this.shipGroup.shipTo.postalAddress.postalCode)
           if (!location) return;
           stores = await this.getStores(location)
         }
@@ -274,6 +303,45 @@ export default defineComponent({
 
     close(selectedFacility?: any) {
       modalController.dismiss({ dismissed: true }, selectedFacility);
+    },
+
+    async searchStores() {
+      if(!this.queryString.trim().length) {
+        return;
+      }
+
+      this.isLoadingStores = true;
+      this.nearbyStores = []
+
+      let stores = []
+      const location = await this.getDeliveryAddressGeoLocation(this.queryString.trim())
+      if (!location) {
+        this.isLoadingStores = false;
+        return;
+      }
+
+      stores = await this.getStores(location)
+
+      if (!stores?.length) {
+        this.isLoadingStores = false;
+        return;
+      }
+
+      const facilityIds = stores.map((store: any) => store.storeCode)
+      const productIds = [...new Set(this.shipGroup.items.map((item: any) => item.productId))] as any;
+      const storesWithInventory = await this.checkInventory(facilityIds, productIds)
+
+      if (!storesWithInventory?.length) {
+        this.isLoadingStores = false;
+        return;
+      }
+
+      stores.map((storeData: any) => {
+        const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
+        if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: this.getStoreDistance(storeData) });
+      });
+
+      this.isLoadingStores = false;
     }
   },
   setup() {
