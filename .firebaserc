@@ -1,23 +1,20 @@
 {
   "projects": {
-    "default": "hotwax-digital-commerce",
+    "uat": "hotwax-digital-commerce-uat",
     "production": "digital-commerce-71eb8"
   },
   "targets": {
-    "hotwax-digital-commerce": {
+    "hotwax-digital-commerce-uat": {
       "hosting": {
-        "dev": [
-          "dev-reroute-fulfilment"
-        ],
         "uat": [
-          "reroute-fulfilment-uat"
+          "gorjana-reroute-fulfilment-uat"
         ]
       }
     },
     "digital-commerce-71eb8": {
       "hosting": {
         "prod": [
-          "reroute-fulfilment"
+          "gorjana-reroute-fulfilment"
         ]
       }
     }
