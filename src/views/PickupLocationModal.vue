@@ -10,21 +10,8 @@
     </ion-toolbar>
   </ion-header>
   <ion-content>
-    <ion-card v-if="shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'">
-      <ion-item lines="none">
-        <ion-label>{{ $t("Showing pickup locations near") }}</ion-label>
-      </ion-item>
-      <ion-item>
-        <ion-list>
-          <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address2 }} </ion-label>
-          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
-        </ion-list>
-      </ion-item>
-    </ion-card>
-    <ion-accordion-group v-else-if="!isSearchingEnabled">
-      <ion-accordion value="rejectedFacility">
+    <ion-accordion-group v-if="!isSearchingEnabled">
+      <ion-accordion value="rejectedFacility" v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP'">
         <ion-item slot="header" color="light">
           <ion-icon slot="start" :icon="locationOutline"></ion-icon>
           <ion-label>{{ $t("Showing pickup locations near") }} {{ storePickupRejectedFacility.postalCode }}</ion-label>
@@ -41,20 +28,38 @@
           </ion-button>
         </ion-item>
       </ion-accordion>
+      <ion-accordion value="rejectedFacility" v-else>
+        <ion-item slot="header" color="light">
+          <ion-icon slot="start" :icon="locationOutline"></ion-icon>
+          <ion-label>{{ $t("Showing pickup locations near") }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
+        </ion-item>
+        <ion-item slot="content" lines="none">
+          <ion-label slot="start">
+            {{ shipGroup.shipTo.postalAddress.toName }}
+            <p>{{ shipGroup.shipTo.postalAddress.address1 }}</p>
+            <p>{{ shipGroup.shipTo.postalAddress.address2 }}</p>
+            <p>{{ shipGroup.shipTo.postalAddress.city }}{{ shipGroup.shipTo.postalAddress.city && shipGroup.shipTo.postalAddress.stateCode ? ", " : "" }}{{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</p>
+          </ion-label>
+          <ion-button fill="clear" slot="end" @click="enableSearching">
+            {{ $t("Edit Zip Code") }}
+          </ion-button>
+        </ion-item>
+      </ion-accordion>
     </ion-accordion-group>
-
     <form
-      v-if="isSearchingEnabled"
+      v-else
       @submit.prevent="searchStores()"
     >
       <ion-searchbar :placeholder="$t('Search Zip Code')" v-model="queryString" />
       <ion-button class="ion-margin" type="submit" expand="block">{{ $t("Find Stores") }}</ion-button>
     </form>
 
-    <ion-item v-if="isLoadingStores" lines="none">
-      <ion-spinner slot="start" color="medium" name="crescent"/>
-      <ion-label>{{ $t("Fetching stores.") }}</ion-label>
-    </ion-item>
+    <div v-if="isLoadingStores" class="empty-state">
+      <ion-item lines="none">
+        <ion-spinner name="crescent" slot="start" />
+        {{ $t("Fetching stores.") }}
+      </ion-item>
+    </div>
     <ion-list v-else-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby Stores") }}</ion-label>
@@ -92,7 +97,6 @@ import {
   IonAccordionGroup,
   IonButton,
   IonButtons,
-  IonCard,
   IonContent,
   IonFab,
   IonFabButton,
@@ -126,7 +130,6 @@ export default defineComponent({
     IonAccordionGroup,
     IonButton,
     IonButtons,
-    IonCard,
     IonContent,
     IonFab,
     IonFabButton,
@@ -273,8 +276,6 @@ export default defineComponent({
       try {
         let stores;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
-          // shipgroup is in brokering queue in this case so we do not
-          // have any facility hence, all the stores are fetched
           stores = await this.getStores(this.storePickupRejectedFacility ? this.storePickupRejectedFacility?.latlon : '')
         } else {
           const location = await this.getDeliveryAddressGeoLocation(this.shipGroup.shipTo.postalAddress.postalCode)
@@ -318,6 +319,11 @@ export default defineComponent({
     },
 
     async searchStores() {
+      // If the searching is already in progress then clicking the button multiple should not initiate the search again
+      if(this.isLoadingStores) {
+        return;
+      }
+
       if(!this.queryString.trim().length) {
         this.errorMessage = "Search for a postal code to check for pickup stores"
         return;
@@ -379,5 +385,14 @@ ion-radio::part(label) {
 
 ion-content {
   --padding-bottom: 80px;
+}
+
+.empty-state {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 </style>
