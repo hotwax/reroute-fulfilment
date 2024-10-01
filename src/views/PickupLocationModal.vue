@@ -6,7 +6,7 @@
           <ion-icon :icon="closeOutline" />
         </ion-button>
       </ion-buttons>
-      <ion-title>{{ $t("Select pickup location") }}</ion-title>
+      <ion-title>{{ $t("Select Pickup Location") }}</ion-title>
     </ion-toolbar>
   </ion-header>
   <ion-content>
@@ -18,13 +18,14 @@
         <ion-list>
           <ion-label>{{ shipGroup.shipTo.postalAddress.toName }}</ion-label>
           <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address1 }} </ion-label>
+          <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.address2 }} </ion-label>
           <ion-label color="dark">{{ shipGroup.shipTo.postalAddress.city }} {{ shipGroup.shipTo.postalAddress.stateCode }} {{ shipGroup.shipTo.postalAddress.country }} {{ shipGroup.shipTo.postalAddress.postalCode }}</ion-label>
         </ion-list>
       </ion-item>
     </ion-card>
     <ion-list v-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
-        <ion-label>{{ $t("Nearby stores") }}</ion-label>
+        <ion-label>{{ $t("Nearby Stores") }}</ion-label>
       </ion-list-header>
       <ion-radio-group v-model="selectedFacility">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
@@ -32,10 +33,11 @@
             <ion-label>
               {{ store.facilityName }}
               <p>{{ store.address1 }}</p>
+              <p>{{ store.address2 }}</p>
               <p>{{ store.city }}{{ store.city && store.state ? ", " : "" }}{{ store.state }}</p>
             </ion-label>
             <!-- Showing store distance in miles -->
-            <ion-label v-if="store.distance">{{ store.distance }} {{ $t("mi") }}</ion-label>
+            <ion-label v-if="store.distance">{{ store.distance }} {{ $t("miles") }}</ion-label>
           </ion-radio>
         </ion-item>
       </ion-radio-group>
@@ -44,9 +46,15 @@
       <ion-label>{{ $t("Inventory not available at any nearby store, please select alternate delivery method") }}</ion-label>
     </ion-item>
     <!-- Only show select button if there are stores to select from -->
-    <div v-if="nearbyStores.length" class="ion-text-center">
-      <ion-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select pickup location") }}</ion-button>
-    </div>
+    <!-- <div v-if="nearbyStores.length" class="ion-text-center">
+      <ion-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId"  @click="updateFacility()">{{ $t("Select Pickup Location") }}</ion-button>
+    </div> -->
+
+    <ion-fab v-if="nearbyStores.length" vertical="bottom" horizontal="end" slot="fixed">
+      <ion-fab-button :disabled="Object.keys(selectedFacility).length == 0 || selectedFacility.facilityId == shipGroup.facilityId" @click="updateFacility()">
+        <ion-icon :icon="saveOutline" />
+      </ion-fab-button>
+    </ion-fab>
   </ion-content>
 </template>
 
@@ -56,6 +64,8 @@ import {
   IonButtons,
   IonCard,
   IonContent,
+  IonFab,
+  IonFabButton,
   IonHeader,
   IonIcon,
   IonItem,
@@ -70,7 +80,7 @@ import {
   modalController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { closeOutline } from 'ionicons/icons';
+import { closeOutline, saveOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import { FacilityService } from '@/services/FacilityService';
@@ -85,6 +95,8 @@ export default defineComponent({
     IonButtons,
     IonCard,
     IonContent,
+    IonFab,
+    IonFabButton,
     IonHeader,
     IonIcon,
     IonItem,
@@ -104,12 +116,11 @@ export default defineComponent({
       selectedFacility: {}
     }
   },
-  props: ["shipGroup"],
+  props: ["shipGroup", "storePickupRejectedFacilityLocation"],
   async mounted() {
     await this.presentLoader()
     await this.getPickupStores();
     this.dismissLoader()
-    
   },
   methods: {
     async presentLoader() {
@@ -197,13 +208,19 @@ export default defineComponent({
       }
     },
 
+    getStoreDistance(store: any) {
+      return (store.dist || store.dist >= 0) && store.dist !== 'Infinity'
+      ? `${parseFloat((store.dist).toFixed(1)).toLocaleString()}`
+      : "";
+    },
+
     async getPickupStores() {
       try {
         let stores;
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
           // shipgroup is in brokering queue in this case so we do not
           // have any facility hence, all the stores are fetched
-          stores = await this.getStores()
+          stores = await this.getStores(this.storePickupRejectedFacilityLocation)
         } else {
           const location = await this.getDeliveryAddressGeoLocation()
           if (!location) return;
@@ -220,7 +237,7 @@ export default defineComponent({
 
         stores.map((storeData: any) => {
           const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
-          if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: storeData.dist });
+          if (inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: this.getStoreDistance(storeData) });
         });
       } catch (error) {
         console.error(error)
@@ -238,7 +255,7 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { closeOutline, router, store };
+    return { closeOutline, saveOutline, router, store };
   }
 });
 </script>
@@ -250,5 +267,9 @@ ion-radio::part(label) {
   justify-content: space-between;
   align-items: center;
   width: 100%
+}
+
+ion-content {
+  --padding-bottom: 80px;
 }
 </style>
