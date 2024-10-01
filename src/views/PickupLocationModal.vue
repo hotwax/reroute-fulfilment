@@ -23,18 +23,37 @@
         </ion-list>
       </ion-item>
     </ion-card>
+    <ion-accordion-group v-else>
+      <ion-accordion value="rejectedFacility">
+        <ion-item slot="header" color="light">
+          <ion-icon slot="start" :icon="locationOutline"></ion-icon>
+          <ion-label>{{ $t("Showing pickup locations near") }} {{ storePickupRejectedFacility.postalCode }}</ion-label>
+        </ion-item>
+        <ion-item slot="content" lines="none">
+          <ion-label slot="start">
+            {{ storePickupRejectedFacility.storeName }}
+            <p>{{ storePickupRejectedFacility.address1 }}</p>
+            <p>{{ storePickupRejectedFacility.address2 }}</p>
+            <p>{{ storePickupRejectedFacility.city }}{{ storePickupRejectedFacility.city && storePickupRejectedFacility.state ? ", " : "" }}{{ storePickupRejectedFacility.state }} {{ storePickupRejectedFacility.postalCode }}</p>
+          </ion-label>
+          <ion-button fill="clear" slot="end">
+            {{ $t("Edit Zip Code") }}
+          </ion-button>
+        </ion-item>
+      </ion-accordion>
+    </ion-accordion-group>
     <ion-list v-if="nearbyStores.length">
       <ion-list-header lines="full" color="light">
         <ion-label>{{ $t("Nearby Stores") }}</ion-label>
       </ion-list-header>
       <ion-radio-group v-model="selectedFacility">
         <ion-item v-for="store of nearbyStores" :key="store.facilityId">
-          <ion-radio :value="store">
+          <ion-radio :value="store" label-placement="end">
             <ion-label>
               {{ store.facilityName }}
               <p>{{ store.address1 }}</p>
               <p>{{ store.address2 }}</p>
-              <p>{{ store.city }}{{ store.city && store.state ? ", " : "" }}{{ store.state }}</p>
+              <p>{{ store.city }}{{ store.city && store.state ? ", " : "" }}{{ store.state }} {{ store.postalCode }}</p>
             </ion-label>
             <!-- Showing store distance in miles -->
             <ion-label v-if="store.distance">{{ store.distance }} {{ $t("miles") }}</ion-label>
@@ -60,6 +79,8 @@
 
 <script lang="ts">
 import {
+  IonAccordion,
+  IonAccordionGroup,
   IonButton,
   IonButtons,
   IonCard,
@@ -80,7 +101,7 @@ import {
   modalController
 } from '@ionic/vue';
 import { defineComponent } from 'vue';
-import { closeOutline, saveOutline } from 'ionicons/icons';
+import { closeOutline, locationOutline, saveOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
 import { useStore } from "@/store";
 import { FacilityService } from '@/services/FacilityService';
@@ -91,6 +112,8 @@ import { UtilityService } from '@/services/UtilityService';
 export default defineComponent({
   name: 'PickupLocationModal',
   components: {
+    IonAccordion,
+    IonAccordionGroup,
     IonButton,
     IonButtons,
     IonCard,
@@ -113,10 +136,11 @@ export default defineComponent({
       loader: null as any,
       nearbyStores: [] as any,
       facilityId: '',
-      selectedFacility: {}
+      selectedFacility: {},
+      accordionValue: "rejectedFacility"
     }
   },
-  props: ["shipGroup", "storePickupRejectedFacilityLocation"],
+  props: ["shipGroup", "storePickupRejectedFacility"],
   async mounted() {
     await this.presentLoader()
     await this.getPickupStores();
@@ -220,7 +244,7 @@ export default defineComponent({
         if (this.shipGroup.shipmentMethodTypeId === 'STOREPICKUP') {
           // shipgroup is in brokering queue in this case so we do not
           // have any facility hence, all the stores are fetched
-          stores = await this.getStores(this.storePickupRejectedFacilityLocation)
+          stores = await this.getStores(this.storePickupRejectedFacility ? this.storePickupRejectedFacility?.latlon : '')
         } else {
           const location = await this.getDeliveryAddressGeoLocation()
           if (!location) return;
@@ -255,7 +279,7 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useStore();
-    return { closeOutline, saveOutline, router, store };
+    return { closeOutline, locationOutline, saveOutline, router, store };
   }
 });
 </script>

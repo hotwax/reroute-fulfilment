@@ -164,7 +164,7 @@ export default defineComponent({
       ],
       isOrderUpdated: false,
       originFacilityId: "",
-      originFacilityLocation: ""
+      lastRejectedFacility: {} as any
     }
   },
   computed: {
@@ -402,11 +402,10 @@ export default defineComponent({
     },
     async updatePickupLocation(shipGroup: any) {
       // If we already have the facility location for the last brokered facility then do not fetch the same information again
-      if(!this.originFacilityLocation) {
+      if(!this.lastRejectedFacility?.storeCode) {
         // Fetch the last facilityId from where the order was rejected
         await this.fetchOrderFacilityChangeHistory();
-        const facility: any = await this.getStoreByFacilityId(this.originFacilityId);
-        this.originFacilityLocation = facility.latlon ? facility.latlon : ""
+        this.lastRejectedFacility = await this.getStoreByFacilityId(this.originFacilityId);
       }
 
       const modal = await modalController
@@ -417,7 +416,7 @@ export default defineComponent({
           backdropDismiss: false,
           componentProps: {
             shipGroup,
-            storePickupRejectedFacilityLocation: this.originFacilityLocation
+            storePickupRejectedFacility: this.lastRejectedFacility
           }
         })
       modal.onDidDismiss().then((result) => {
