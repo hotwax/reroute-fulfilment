@@ -346,16 +346,14 @@ export default defineComponent({
       let originFacilityName = "", resp;
 
       try {
-        resp = await OrderService.getRerouteOrderBrokeringHistory({ "token": this.token })
+        resp = await OrderService.getRerouteOrderFacilityChangeHistory({ "token": this.token, facilityId: "PICKUP_REJECTED" })
 
-        if(!hasError(resp) && resp.data?.brokeringHistory.length) {
-          const oldestBrokeringHistory = resp.data.brokeringHistory.reduce((oldest: any, current: any) => {
-              return current.changeDatetime < oldest.changeDatetime ? current : oldest;
-          });
+        if(!hasError(resp) && resp.data?.facilityChangeHistory?.length) {
+          const fromFacilityId = resp.data.facilityChangeHistory[0]?.fromFacilityId
 
           resp = await FacilityService.getStores({
             "viewSize": process.env.VUE_APP_VIEW_SIZE,
-            "filters": [`storeCode: ${oldestBrokeringHistory.facilityId}`]
+            "filters": [`storeCode: ${fromFacilityId}`]
           })
 
           if(!hasError(resp) && resp.data.response.numFound) {
