@@ -174,6 +174,7 @@ import {
   alertController,
   IonButton,
   IonCard,
+  IonChip,
   IonContent,
   IonIcon,
   IonItem,
@@ -211,6 +212,7 @@ export default defineComponent({
     Image,
     IonButton,
     IonCard,
+    IonChip,
     IonContent,
     IonIcon,
     IonItem,
@@ -279,7 +281,7 @@ export default defineComponent({
       this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
       this.fetchOrderFacilityChangeHistory()
-      if(Object.keys(this.order.shipGroup).length){
+      if(this.order?.shipGroup && Object.keys(this.order.shipGroup).length){
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
         await this.getPickupStores();
         if(!this.nearbyStores.length) {
@@ -379,20 +381,19 @@ export default defineComponent({
           point = `${this.customerAddress.latitude},${this.customerAddress.longitude}`
         }
 
-        stores = await this.getStores(point ? point : "")
+        stores = await this.getStores(point)
         this.availableStores = stores;
 
         if(!stores?.length) return;
 
         const facilityIds = stores.map((store: any) => store.storeCode)
         const productIds = [...new Set(this.order.shipGroup.items.map((item: any) => item.productId))] as any;
-        const storesWithInventory = await this.checkInventory(facilityIds, productIds)
-        this.storesWithInventory = storesWithInventory
+        this.storesWithInventory = await this.checkInventory(facilityIds, productIds)
 
-        if(!storesWithInventory?.length) return;
+        if(!this.storesWithInventory?.length) return;
 
         stores.map((storeData: any) => {
-          const inventoryDetails = storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
+          const inventoryDetails = this.storesWithInventory.filter((store: any) => store.facilityId === storeData.storeCode);
           if(inventoryDetails.length === productIds.length) this.nearbyStores.push({...storeData, ...inventoryDetails[0], distance: storeData.dist });
         });
       } catch (error) {
