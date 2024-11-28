@@ -12,7 +12,7 @@
                 {{ order.customerName }}
                 <p>{{ order.id }}</p>
               </ion-label>
-              <ion-note slot="end">{{ $filters.formatDate(order.orderDate) }}</ion-note>
+              <ion-note slot="end">{{ $filters.formatDate(order.orderDate, "yyyy-MM-dd HH:mm:ss") }}</ion-note>
             </ion-item>
           </ion-card>
 
@@ -609,10 +609,6 @@ export default defineComponent({
         const itemsForCancellation = shipGroup.items.filter((item: any) => item.isItemCancelled);
         const itemsWithFacility = shipGroup.items.filter((item: any) => item.selectedFacilityId)
         const itemsForShipping = shipGroup.items.filter((item: any) => !(item.isItemCancelled || item.selectedFacilityId))
-        console.log(itemsForCancellation);
-        console.log(itemsWithFacility);
-        console.log(itemsForShipping);
-        
 
         if(itemsForCancellation.length) {
           isUpdated = await this.cancelShipGroup(shipGroup, itemsForCancellation)
