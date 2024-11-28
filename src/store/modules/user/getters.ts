@@ -27,6 +27,9 @@ const getters: GetterTree <UserState, RootState> = {
     },
     isSplitEnabled (state) {
         return state.isSplitEnabled;
+    },
+    isCancellationAllowed (state) {
+        return state.isCancellationAllowed
     }
 }
 export default getters;

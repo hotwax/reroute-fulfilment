@@ -5,4 +5,5 @@ export default interface UserState {
     deliveryMethod: string;
     permissions: any;
     isSplitEnabled: boolean;
+    isCancellationAllowed: boolean;
 }

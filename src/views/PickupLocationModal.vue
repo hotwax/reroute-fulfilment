@@ -30,7 +30,7 @@
       <ion-radio-group v-model="selectedFacilityIdValue">
         <ion-item lines="none" v-if="!isPickupForAll">
           <ion-radio label-placement="end" value="cancel">
-            <ion-label>{{ translate("Request cancelation") }}</ion-label>
+            <ion-label>{{ translate(isCancellationAllowed ? "Cancel item" : "Request cancelation") }}</ion-label>
           </ion-radio>
         </ion-item>
 
@@ -83,8 +83,8 @@ import {
 import { defineComponent } from 'vue';
 import { closeOutline, locationOutline } from 'ionicons/icons';
 import { useRouter } from "vue-router";
-import { useStore } from "@/store";
 import { translate } from '@/i18n';
+import { mapGetters, useStore } from 'vuex'
 
 export default defineComponent({
   name: 'PickupLocationModal',
@@ -114,6 +114,13 @@ export default defineComponent({
     }
   },
   props: ["nearbyStores", "isPickupForAll", "availableStores", "storesWithInventory", "selectedFacilityId", "currentProductId", "customerAddress"],
+  computed: {
+    ...mapGetters({
+      deliveryMethod: 'user/getDeliveryMethod',
+      isSplitEnabled: 'user/isSplitEnabled',
+      isCancellationAllowed: 'user/isCancellationAllowed'
+    })
+  },
   async mounted() {
     if(this.isPickupForAll) {
       this.stores = this.nearbyStores

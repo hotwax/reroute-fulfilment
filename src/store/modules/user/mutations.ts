@@ -25,6 +25,9 @@ const mutations: MutationTree <UserState> = {
     },
     [types.USER_ORDER_SPLIT_CONFIG_UPDATED] (state, payload) {
         state.isSplitEnabled = payload
+    },
+    [types.USER_ITEM_CANCELLATION_CONFIG_UPDATED] (state, payload) {
+        state.isCancellationAllowed = payload
     }
 }
 export default mutations;

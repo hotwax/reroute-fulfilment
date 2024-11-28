@@ -59,7 +59,7 @@
                   <Image :src='getProduct(item.productId).mainImageUrl' />
                 </ion-thumbnail>
                 <ion-label>
-                  <p class="overline" v-if="item.isItemCancelled">{{ translate("Request Cancellation") }}</p>
+                  <p class="overline" v-if="item.isItemCancelled">{{ translate(isCancellationAllowed ? "Cancel" : "Request Cancellation") }}</p>
                   {{ item.name }}
                   <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
                     <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
@@ -73,6 +73,7 @@
                   </ion-chip>
                   <ion-button v-else slot="end" fill="clear" @click="updatePickupLocation(false, item.selectedFacilityId, item)">
                     <ion-icon :icon="addOutline" slot="icon-only" />
+                    <ion-icon :icon="storefrontOutline" slot="icon-only" />
                   </ion-button>
                 </template>
               </ion-item>
@@ -89,7 +90,7 @@
                     <Image :src='getProduct(item.productId).mainImageUrl' />
                   </ion-thumbnail>
                   <ion-label>
-                    <p class="overline" v-if="item.isItemCancelled">{{ translate("Request Cancellation") }}</p>
+                    <p class="overline" v-if="item.isItemCancelled">{{ translate(isCancellationAllowed ? "Cancel" :"Request Cancellation") }}</p>
                     {{ item.name }}
                     <p v-for="(attribute, feature) in ($filters.groupFeatures(getProduct(item.productId).featureHierarchy))" :key="attribute" >
                       <span class="sentence-case">{{ feature }}</span>: {{ attribute }}
@@ -150,7 +151,7 @@
 
             <div class="actions">
               <ion-button :disabled="!isOrderItemsEligibleForUpdation(order.shipGroup)" @click="confirmSave(order.shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
-              <ion-button v-if="hasPermission(Actions.APP_SHPGRP_CNCL)" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate("Cancel") }}</ion-button>
+              <ion-button @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
             </div>
           </ion-card>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
@@ -256,6 +257,7 @@ export default defineComponent({
     ...mapGetters({
       deliveryMethod: 'user/getDeliveryMethod',
       isSplitEnabled: 'user/isSplitEnabled',
+      isCancellationAllowed: 'user/isCancellationAllowed'
     })
   },
   props: ["token"],
@@ -556,6 +558,7 @@ export default defineComponent({
           {
             text: translate("Cancel"),
             handler: async () => {
+              // Todo: handle case for the request cancellation
               const isCancelled = await this.cancelShipGroup(shipGroup, []);
               showToast(translate(isCancelled ? "Order cancelled successfully." : "Failed to cancel the order."))
             }
