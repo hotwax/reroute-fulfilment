@@ -138,16 +138,15 @@
                 <p>{{ selectedFacility.city }} {{ selectedFacility.stateCode }} {{ order.shipGroup.shipTo.postalAddress.country }} {{ selectedFacility.postalCode }}</p>
               </ion-label>
             </ion-item>
-            <ion-item v-else-if="order.shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP' && updatedAddress.firstName">
+            <ion-item v-else-if="order.shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP' && customerAddress.firstName">
               <ion-label>
-                {{ updatedAddress.firstName }} {{ updatedAddress.lastName }}
-                <p>{{ updatedAddress.address1 }}</p>
-                <p>{{ updatedAddress.city }} {{ updatedAddress.stateCode }} {{ updatedAddress.postalCode }}</p>
+                {{ customerAddress.firstName }} {{ customerAddress.lastName }}
+                <p>{{ customerAddress.address1 }}</p>
+                <p>{{ customerAddress.city }} {{ customerAddress.stateCode }} {{ customerAddress.postalCode }}</p>
               </ion-label>
             </ion-item>
 
             <ion-button v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedSegment === 'together'" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE)" @click="updatePickupLocation(true, selectedFacility.facilityId)" expand="block" fill="outline" class="ion-margin">{{ selectedFacility.facilityId ? translate("Change pickup location") : translate("Select pickup location")}}</ion-button>
-            <ion-button v-else-if="order.shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP'" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE)" @click="updateDeliveryAddress(order.shipGroup)" expand="block" fill="outline" class="ion-margin">{{ updatedAddress.address1 ? translate("Edit address") : translate("Add address") }}</ion-button>
 
             <div class="actions">
               <ion-button :disabled="!isOrderItemsEligibleForUpdation(order.shipGroup)" @click="confirmSave(order.shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
@@ -197,7 +196,6 @@ import { OrderService } from "@/services/OrderService";
 import { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
 import Image from "@/components/Image.vue";
-import AddressModal from "@/views/AddressModal.vue";
 import { ProductService } from "@/services/ProductService";
 import PickupLocationModal from "@/views/PickupLocationModal.vue";
 import { Actions, hasPermission } from '@/authorization'
@@ -249,7 +247,6 @@ export default defineComponent({
       availableStores: [] as any,
       storesWithInventory: [] as any,
       selectedFacility: {} as any,
-      updatedAddress: {} as any,
       selectedItemsByFacility: {} as any,
       isOrderUpdated: false,
       outOfStockItems: [] as any
@@ -283,6 +280,12 @@ export default defineComponent({
       this.fetchOrderFacilityChangeHistory()
       if(this.order?.shipGroup && Object.keys(this.order.shipGroup).length){
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
+        if (this.order.shipGroup.shipTo.postalAddress.toName) {
+          const toNameSplit = this.order.shipGroup.shipTo.postalAddress.toName.split(" ");
+          toNameSplit.length > 0 && (this.customerAddress.firstName = toNameSplit[0]);
+          toNameSplit.length > 1 && (this.customerAddress.lastName = toNameSplit[1]);
+        }
+
         await this.getPickupStores();
         if(!this.nearbyStores.length) {
           this.selectedSegment = "separate";
@@ -440,8 +443,14 @@ export default defineComponent({
 
     updateDeliveryMethod(event: any, shipGroup: any) {
       shipGroup.selectedShipmentMethodTypeId = event.detail.value;
-      if(event.detail.value === "STOREPICKUP") this.updatedAddress = {};
-      else this.selectedFacility = {}
+      if(event.detail.value !== "STOREPICKUP") {
+        this.selectedFacility = {};
+        this.selectedItemsByFacility = {};
+        this.order.shipGroup.items.map((item: any) => {
+          item.selectedFacilityId = ""
+          item.isItemCancelled = false
+        })
+      }
     },
 
     checkForOutOfStockItems(shipGroup: any) {
@@ -495,21 +504,22 @@ export default defineComponent({
       const itemReasonMap = {} as any
 
       if(!cancelledItems.length) {
-        shipGroup.items.map((item: any) => itemReasonMap[item.itemSeqId] = 'OICR_CHANGE_MIND')
+        shipGroup.items.map((item: any) => {
+          itemReasonMap[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
+          itemReasonMap[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
+        })
       }
 
-      const payload = {
+      let payload = {
         "orderId": this.order.id,
         "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "itemReasonMap": itemReasonMap,
         "token": this.token
       } as any
 
-      console.log(cancelledItems);
-      console.log(cancelledItems.length);
-
       try {
         if(!cancelledItems.length) {
+          payload = { ...payload, ...itemReasonMap }
+
           resp = await OrderService.cancelOrderItem(payload);
           if(resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
             return true;
@@ -517,12 +527,13 @@ export default defineComponent({
             throw resp.data;
           }
         } else {
-          const responses = await Promise.allSettled(cancelledItems.map(async(item: any) => await OrderService.cancelOrderItem({
-            "orderId": this.order.id,
-            "shipGroupSeqId": shipGroup.shipGroupSeqId,
-            "orderItemSeqId": item.itemSeqId,
-            "token": this.token
-          })))
+          const responses = await Promise.allSettled(cancelledItems.map(async(item: any) => {
+            payload[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
+            payload[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
+            payload["orderItemSeqId"] = item.itemSeqId
+
+            return await OrderService.cancelOrderItem(payload)
+          }))
 
           const hasFailedResponse = responses.some((response: any) => response.status === 'rejected')
           return !hasFailedResponse
@@ -552,25 +563,6 @@ export default defineComponent({
         ],
       });
       return alert.present();
-    },
-
-    async updateDeliveryAddress(shipGroup: any) {
-      const modal = await modalController.create({
-        component: AddressModal,
-        componentProps: {
-          shipGroup,
-          token: this.token,
-          updatedAddress: this.updatedAddress
-        }
-      })
-
-      modal.onDidDismiss().then((result) => {
-        if(result.data?.updatedAddress) {
-          this.updatedAddress = result.data.updatedAddress
-        }
-      });
-
-      return modal.present();
     },
 
     async confirmSave(shipGroup: any) {
@@ -632,7 +624,7 @@ export default defineComponent({
           if(!isUpdated) hasFailure = true;
         }
 
-        if(shipGroup.selectedShipmentMethodTypeId !== "STOREPICKUP" && this.updatedAddress.address1 && itemsForShipping.length) {
+        if(shipGroup.selectedShipmentMethodTypeId !== "STOREPICKUP" && this.customerAddress.address1 && itemsForShipping.length) {
           if(await this.updateShippingAddress(shipGroup)) {
             isUpdated = await this.brokerOrderItem(itemsForShipping, true);
             if(!isUpdated) hasFailure = true; 
@@ -660,9 +652,9 @@ export default defineComponent({
 
     isOrderItemsEligibleForUpdation(shipGroup: any) {
       if(this.selectedSegment === "together") {
-        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? this.selectedFacility.facilityId : this.updatedAddress.address1
+        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? this.selectedFacility.facilityId : this.customerAddress.address1
       } else {
-        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? !shipGroup.items.some((item: any) => !(item.selectedFacilityId || item.isItemCancelled)) : this.updatedAddress.address1
+        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? !shipGroup.items.some((item: any) => !(item.selectedFacilityId || item.isItemCancelled)) : this.customerAddress.address1
       }
     },
 
@@ -702,20 +694,19 @@ export default defineComponent({
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": "_NA_",
-        "toName": `${this.updatedAddress.firstName} ${this.updatedAddress.lastName}`,
-        "address1": this.updatedAddress.address1,
-        "city": this.updatedAddress.city,
-        "stateProvinceGeoId": this.updatedAddress.stateProvinceGeoId,
-        "postalCode": this.updatedAddress.postalCode,
-        "countryGeoId": this.updatedAddress.countryGeoId,
+        "toName": `${this.customerAddress.firstName} ${this.customerAddress.lastName}`,
+        "address1": this.customerAddress.address1,
+        "city": this.customerAddress.city,
+        "stateProvinceGeoId": this.customerAddress.stateProvinceGeoId,
+        "postalCode": this.customerAddress.postalCode,
+        "countryGeoId": this.customerAddress.countryGeoId,
         "token": this.token
       } as any
 
       try {
         resp = await OrderService.updateShippingAddress(payload);
         if(!hasError(resp)) {
-          shipGroup.shipTo.postalAddress = this.updatedAddress
-          this.updatedAddress = {}
+          shipGroup.shipTo.postalAddress = this.customerAddress
           this.isOrderUpdated = true
           return true;
         } else {
