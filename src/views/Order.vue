@@ -502,48 +502,69 @@ export default defineComponent({
     },
 
     async cancelShipGroup(shipGroup: any, cancelledItems: any) {
-      let resp
-      const itemReasonMap = {} as any
-
-      if(!cancelledItems.length) {
-        shipGroup.items.map((item: any) => {
-          itemReasonMap[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
-          itemReasonMap[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
-        })
-      }
-
-      let payload = {
-        "orderId": this.order.id,
-        "shipGroupSeqId": shipGroup.shipGroupSeqId,
-        "token": this.token
-      } as any
+      let resp;
+      const itemReasonMap = {} as any;
 
       try {
-        if(!cancelledItems.length) {
-          payload = { ...payload, ...itemReasonMap }
+        if(!this.isCancellationAllowed) {
+          const itemsToCancel = cancelledItems?.length ? cancelledItems : shipGroup.items
+          const itemIds = [] as any;
 
-          resp = await OrderService.cancelOrderItem(payload);
-          if(resp.status === 200 && !hasError(resp) && resp.data.orderId == this.order.id) {
+          itemsToCancel.map((item: any) => {
+            itemIds.push(item.itemSeqId)
+            itemReasonMap[`crm_cancellationReason:${item.itemSeqId}`] = "Customer cancellation from reroute app"
+          })
+
+          resp = await OrderService.requestCancelRerouteOrderItem({
+            "orderId": this.order.id,
+            "token": this.token,
+            "orderItemSeqId": itemIds,
+            ...itemReasonMap
+          })
+
+          if(!hasError(resp)) {
             return true;
           } else {
             throw resp.data;
           }
         } else {
-          const responses = await Promise.allSettled(cancelledItems.map(async(item: any) => {
-            payload[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
-            payload[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
-            payload["orderItemSeqId"] = item.itemSeqId
+          let payload = {
+            "orderId": this.order.id,
+            "shipGroupSeqId": shipGroup.shipGroupSeqId,
+            "token": this.token
+          } as any
 
-            return await OrderService.cancelOrderItem(payload)
-          }))
+          if(!cancelledItems.length) {
+            shipGroup.items.map((item: any) => {
+              itemReasonMap[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
+              itemReasonMap[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
+            })
+ 
+            payload = { ...payload, ...itemReasonMap }
 
-          const hasFailedResponse = responses.some((response: any) => response.status === 'rejected')
-          return !hasFailedResponse
+            resp = await OrderService.cancelOrderItem(payload);
+            if(!hasError(resp)) {
+              return true;
+            } else {
+              throw resp.data;
+            }
+          } else {
+            const responses = await Promise.allSettled(cancelledItems.map(async(item: any) => {
+              payload[`irm_${item.itemSeqId}`] = "OICR_CHANGE_MIND"
+              payload[`icm_${item.itemSeqId}`] = "Canceled by customer using Re-Route"
+              payload["orderItemSeqId"] = item.itemSeqId
+
+              return await OrderService.cancelOrderItem(payload)
+            }))
+
+            const hasFailedResponse = responses.some((response: any) => response.status === 'rejected')
+            return !hasFailedResponse
+          }
         }
-      } catch (error) {
-        console.error(error)
+      } catch(error) {
+        console.error(error);
       }
-      return false;
+      return false
     },
 
     async cancelOrder(shipGroup: any) {

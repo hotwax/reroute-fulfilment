@@ -56,6 +56,14 @@ const releaseRerouteOrderItem = async (payload: any): Promise<any> => {
   });
 }
 
+const requestCancelRerouteOrderItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "requestCancelRerouteOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrder,
   getRerouteOrderFacilityChangeHistory,
@@ -63,5 +71,6 @@ export const OrderService = {
   updatePickupFacility,
   cancelOrderItem,
   getProductStoreSetting,
-  releaseRerouteOrderItem
+  releaseRerouteOrderItem,
+  requestCancelRerouteOrderItem
 }
