@@ -137,7 +137,7 @@ export default defineComponent({
       modalController.dismiss({ dismissed: true, ...payload });
     },
     save() {
-      this.closeModal({ selectedFacilityId: this.selectedFacilityIdValue })
+      this.closeModal({ selectedOptionId: this.selectedFacilityIdValue })
     }
   },
   setup() {

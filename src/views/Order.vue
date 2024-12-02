@@ -475,18 +475,18 @@ export default defineComponent({
       })
 
       modal.onDidDismiss().then((result) => {
-        const selectedFacilityId = result.data?.selectedFacilityId;
+        const selectedOptionId = result.data?.selectedOptionId;
 
-        if(selectedFacilityId) {
-          if(selectedFacilityId === "cancel") {
+        if(selectedOptionId) {
+          if(selectedOptionId === "cancel") {
             item.isItemCancelled = true;    
           } else {
             if(isPickupForAll) {
-              this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === selectedFacilityId);
+              this.selectedFacility = this.nearbyStores.find((store: any) => store.facilityId === selectedOptionId);
             } else {
-              item.selectedFacilityId = selectedFacilityId
-              if(this.selectedItemsByFacility[selectedFacilityId]?.length) this.selectedItemsByFacility[selectedFacilityId].push(item);
-              else this.selectedItemsByFacility[selectedFacilityId] = [item]
+              item.selectedFacilityId = selectedOptionId
+              if(this.selectedItemsByFacility[selectedOptionId]?.length) this.selectedItemsByFacility[selectedOptionId].push(item);
+              else this.selectedItemsByFacility[selectedOptionId] = [item]
             }
           }
         }
