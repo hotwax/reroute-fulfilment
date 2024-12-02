@@ -279,10 +279,10 @@ export default defineComponent({
       })
       this.store.dispatch("user/setUserInstanceUrl", `${this.$route.query.oms}/api/`)
       await this.getOrder();
-      this.fetchOrderFacilityChangeHistory()
       if(this.order?.shipGroup && Object.keys(this.order.shipGroup).length){
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
         await this.getPickupStores();
+        this.fetchOrderFacilityChangeHistory()
         if(!this.nearbyStores.length) {
           this.selectedSegment = "separate";
           this.checkForOutOfStockItems(this.order.shipGroup)
@@ -350,17 +350,22 @@ export default defineComponent({
         resp = await OrderService.getRerouteOrderFacilityChangeHistory({ "token": this.token, facilityId: "PICKUP_REJECTED" })
 
         if(!hasError(resp) && resp.data?.facilityChangeHistory?.length) {
-          const fromFacilityId = resp.data.facilityChangeHistory[0]?.fromFacilityId
+          const oldestBrokeringHistory = resp.data.facilityChangeHistory.reduce((oldest: any, current: any) => current.changeDatetime > oldest.changeDatetime ? current : oldest);
+          const fromFacilityId = oldestBrokeringHistory.fromFacilityId;
 
-          resp = await FacilityService.getStores({
-            "viewSize": process.env.VUE_APP_VIEW_SIZE,
-            "filters": [`storeCode: ${fromFacilityId}`]
-          })
+          originFacilityName = this.availableStores.find((store: any) => store.storeCode === fromFacilityId)?.storeName
 
-          if(!hasError(resp) && resp.data.response.numFound) {
-            originFacilityName = resp.data?.response.docs[0].storeName
-          } else {
-            throw resp.data;
+          if(!originFacilityName) {
+            resp = await FacilityService.getStores({
+              "viewSize": process.env.VUE_APP_VIEW_SIZE,
+              "filters": [`storeCode: ${fromFacilityId}`]
+            })
+
+            if(!hasError(resp) && resp.data.response.numFound) {
+              originFacilityName = resp.data?.response.docs[0].storeName
+            } else {
+              throw resp.data;
+            }
           }
         } else {
           throw resp.data;
