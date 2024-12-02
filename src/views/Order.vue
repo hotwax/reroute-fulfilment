@@ -330,7 +330,7 @@ export default defineComponent({
             if(group.facilityId === 'PICKUP_REJECTED' && group.shipmentMethodTypeId === "STOREPICKUP") {
               group.selectedShipmentMethodTypeId = group.shipmentMethodTypeId;
               group.items = group.items.filter((item: any) => {
-                if(item.status == 'ITEM_CANCELLED') return false;
+                if(item.status == "ITEM_CANCELLED" || item.status === "ITEM_REQ_CANCELATN") return false;
                 productIds.add(item.productId);
                 return true;
               })
@@ -582,6 +582,7 @@ export default defineComponent({
               // Todo: handle case for the request cancellation
               const isCancelled = await this.cancelShipGroup(shipGroup, []);
               showToast(translate(isCancelled ? "Order cancelled successfully." : "Failed to cancel the order."))
+              this.getOrder()
             }
           }
         ],
