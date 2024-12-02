@@ -139,9 +139,9 @@
                 <p>{{ selectedFacility.city }} {{ selectedFacility.stateCode }} {{ order.shipGroup.shipTo.postalAddress.country }} {{ selectedFacility.postalCode }}</p>
               </ion-label>
             </ion-item>
-            <ion-item v-else-if="order.shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP' && customerAddress.firstName">
+            <ion-item v-else-if="order.shipGroup.selectedShipmentMethodTypeId !== 'STOREPICKUP' && customerAddress.toName">
               <ion-label>
-                {{ customerAddress.firstName }} {{ customerAddress.lastName }}
+                {{ customerAddress.toName }}
                 <p>{{ customerAddress.address1 }}</p>
                 <p>{{ customerAddress.city }} {{ customerAddress.stateCode }} {{ customerAddress.postalCode }}</p>
               </ion-label>
@@ -282,12 +282,6 @@ export default defineComponent({
       this.fetchOrderFacilityChangeHistory()
       if(this.order?.shipGroup && Object.keys(this.order.shipGroup).length){
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
-        if (this.order.shipGroup.shipTo.postalAddress.toName) {
-          const toNameSplit = this.order.shipGroup.shipTo.postalAddress.toName.split(" ");
-          toNameSplit.length > 0 && (this.customerAddress.firstName = toNameSplit[0]);
-          toNameSplit.length > 1 && (this.customerAddress.lastName = toNameSplit[1]);
-        }
-
         await this.getPickupStores();
         if(!this.nearbyStores.length) {
           this.selectedSegment = "separate";
@@ -715,7 +709,7 @@ export default defineComponent({
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": "_NA_",
-        "toName": `${this.customerAddress.firstName} ${this.customerAddress.lastName}`,
+        "toName": this.customerAddress.toName,
         "address1": this.customerAddress.address1,
         "city": this.customerAddress.city,
         "stateProvinceGeoId": this.customerAddress.stateProvinceGeoId,

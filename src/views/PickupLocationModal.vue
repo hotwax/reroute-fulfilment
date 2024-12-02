@@ -15,7 +15,7 @@
         <ion-accordion>
           <ion-item slot="header" color="light">
             <ion-icon :icon="locationOutline" slot="start" />
-            <ion-label>{{ translate("Showing pickup location near your saved address") }}</ion-label>
+            <ion-label>{{ translate("Showing pickup locations near your saved address") }}</ion-label>
           </ion-item>
           <ion-item slot="content">
             <ion-label>
