@@ -1,9 +1,6 @@
 import { api } from '@/adapter';
-import store from '@/store';
 
 const getOrder = async (payload: any): Promise <any>  => {
-  let baseURL = store.getters['user/getInstanceUrl'];
-  baseURL = baseURL && baseURL.startsWith('http') ? baseURL : `https://${baseURL}.hotwax.io/api/`;
   return api({
     url: "getRerouteOrder",
     method: "post",
@@ -43,10 +40,37 @@ const getProductStoreSetting = async (payload: any): Promise<any> => {
   });
 }
 
+const getRerouteOrderFacilityChangeHistory = async (payload: any): Promise<any> => {
+  return api({
+    url: "getRerouteOrderFacilityChangeHistory",
+    method: "post",
+    data: payload
+  });
+}
+
+const releaseRerouteOrderItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "releaseRerouteOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
+const requestCancelRerouteOrderItem = async (payload: any): Promise<any> => {
+  return api({
+    url: "requestCancelRerouteOrderItem",
+    method: "post",
+    data: payload
+  });
+}
+
 export const OrderService = {
   getOrder,
+  getRerouteOrderFacilityChangeHistory,
   updateShippingAddress,
   updatePickupFacility,
   cancelOrderItem,
-  getProductStoreSetting
+  getProductStoreSetting,
+  releaseRerouteOrderItem,
+  requestCancelRerouteOrderItem
 }

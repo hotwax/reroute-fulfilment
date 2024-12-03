@@ -4,4 +4,6 @@ export default interface UserState {
     instanceUrl: string;
     deliveryMethod: string;
     permissions: any;
+    isSplitEnabled: boolean;
+    isCancellationAllowed: boolean;
 }

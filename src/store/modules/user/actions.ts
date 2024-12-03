@@ -5,9 +5,8 @@ import UserState from './UserState'
 import * as types from './mutation-types'
 import { hasError, showToast } from '@/utils'
 import { translate } from '@/i18n'
-import moment from 'moment';
+import { DateTime } from 'luxon'
 import emitter from '@/event-bus'
-import "moment-timezone";
 import { updateInstanceUrl, updateToken, resetConfig } from '@/adapter'
 import { prepareAppPermissions, setPermissions } from '@/authorization'
 import { OrderService } from '@/services/OrderService'
@@ -88,7 +87,7 @@ const actions: ActionTree<UserState, RootState> = {
   async getProfile ( { commit }) {
     const resp = await UserService.getProfile()
     if (resp.status === 200) {
-      const localTimeZone = moment.tz.guess();
+      const localTimeZone = DateTime.now().zoneName;
       if (resp.data.userTimeZone !== localTimeZone) {
         emitter.emit('timeZoneDifferent', { profileTimeZone: resp.data.userTimeZone, localTimeZone});
       }
@@ -120,7 +119,7 @@ const actions: ActionTree<UserState, RootState> = {
         token,
         inputFields: {
           productStoreId,
-          "settingTypeEnumId": ["CUST_DLVRMTHD_UPDATE", "CUST_DLVRADR_UPDATE", "CUST_PCKUP_UPDATE", "CUST_ALLOW_CNCL", "RF_SHIPPING_METHOD"],
+          "settingTypeEnumId": ["CUST_DLVRMTHD_UPDATE", "CUST_DLVRADR_UPDATE", "CUST_PCKUP_UPDATE", "CUST_ALLOW_CNCL", "RF_SHIPPING_METHOD", "CUST_ORD_ITEM_SPLIT"],
           "settingTypeEnumId_op": "in"
         },
         viewSize: 100
@@ -128,10 +127,14 @@ const actions: ActionTree<UserState, RootState> = {
       if (!hasError(resp)) {
         const permissions = resp.data.docs.filter((permission: any) => permission.settingValue == 'true').map((permission: any) => permission.settingTypeEnumId)
         const deliveryMethod = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'RF_SHIPPING_METHOD')?.settingValue
+        const isSplitEnabled = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'CUST_ORD_ITEM_SPLIT')?.settingValue
+        const isCancellationAllowed = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'CUST_ALLOW_CNCL')?.settingValue
         const appPermissions = prepareAppPermissions(permissions);
         setPermissions(appPermissions);
         commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? deliveryMethod : "STANDARD");
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
+        commit(types.USER_ORDER_SPLIT_CONFIG_UPDATED, isSplitEnabled === "true");
+        commit(types.USER_ITEM_CANCELLATION_CONFIG_UPDATED, isCancellationAllowed === "true");
       }
     } catch (error) {
       console.error(error)
