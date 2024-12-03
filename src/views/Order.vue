@@ -618,7 +618,7 @@ export default defineComponent({
           isUpdated = await this.updatePickupFacility(shipGroup)
           showToast(translate(isUpdated ? "Pickup facility updated successfully." : "Failed to update the pickup store."))
         } else {
-          isUpdated = await this.updateShippingAddress(shipGroup)
+          isUpdated = await this.updateShippingMethod(shipGroup)
 
           if(isUpdated) {
             const isUpdated = await this.brokerOrderItem(shipGroup.items, true);
@@ -645,7 +645,7 @@ export default defineComponent({
         }
 
         if(shipGroup.selectedShipmentMethodTypeId !== "STOREPICKUP" && this.customerAddress.address1 && itemsForShipping.length) {
-          if(await this.updateShippingAddress(shipGroup)) {
+          if(await this.updateShippingMethod(shipGroup)) {
             isUpdated = await this.brokerOrderItem(itemsForShipping, true);
             if(!isUpdated) hasFailure = true; 
           } else {
@@ -705,7 +705,7 @@ export default defineComponent({
       return false;
     },
 
-    async updateShippingAddress(shipGroup: any) {
+    async updateShippingMethod(shipGroup: any) {
       let resp
 
       const payload = {
@@ -714,19 +714,13 @@ export default defineComponent({
         "shipmentMethod": `${this.deliveryMethod}@_NA_`,
         "contactMechPurposeTypeId": "SHIPPING_LOCATION",
         "facilityId": "_NA_",
-        "toName": this.customerAddress.toName,
-        "address1": this.customerAddress.address1,
-        "city": this.customerAddress.city,
-        "stateProvinceGeoId": this.customerAddress.stateProvinceGeoId,
-        "postalCode": this.customerAddress.postalCode,
-        "countryGeoId": this.customerAddress.countryGeoId,
+        "contactMechId": this.customerAddress.id,
         "token": this.token
       } as any
 
       try {
         resp = await OrderService.updateShippingAddress(payload);
         if(!hasError(resp)) {
-          shipGroup.shipTo.postalAddress = this.customerAddress
           this.isOrderUpdated = true
           return true;
         } else {
