@@ -1,6 +1,6 @@
 {
   "name": "reroute-fulfillment",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Reroute Fulfillment",
   "scripts": {
@@ -41,7 +41,7 @@
     "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-plugin-router": "~5.0.8",
     "@vue/cli-plugin-typescript": "~5.0.8",
-    "@vue/cli-service": "~5.0.8",    
+    "@vue/cli-service": "~5.0.8",
     "@vue/compiler-sfc": "^3.0.0-0",
     "@vue/eslint-config-typescript": "^9.1.0",
     "@vue/test-utils": "^2.0.0-0",
