@@ -37,7 +37,7 @@
               </ion-item> -->
               <ion-item>
                 <ion-select :label="$t('Delivery method')" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRMTHD_UPDATE)" interface="popover" :value="shipGroup.selectedShipmentMethodTypeId" @ionChange="updateDeliveryMethod($event, shipGroup)">
-                  <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ method.name }}</ion-select-option>
+                  <ion-select-option v-for="method in deliveryMethods" :key="method.value" :value="method.value">{{ $t(method.name) }}</ion-select-option>
                 </ion-select>
               </ion-item>
               <ion-button v-if="shipGroup.shipmentMethodTypeId === 'STOREPICKUP' && shipGroup.selectedShipmentMethodTypeId !== shipGroup.shipmentMethodTypeId && !shipGroup.updatedAddress" :disabled="!hasPermission(Actions.APP_SHPGRP_DLVRADR_UPDATE) && shipGroup.shipmentMethodTypeId !== 'STOREPICKUP'" @click="updateDeliveryAddress(shipGroup)" expand="block" fill="outline">{{ $t("Add address") }}</ion-button>
@@ -113,7 +113,7 @@ import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
 import { mapGetters, useStore } from 'vuex'
 import { OrderService } from "@/services/OrderService";
-import { translate } from "@/i18n";
+import i18n, { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
 import Image from "@/components/Image.vue";
 import AddressModal from "@/views/AddressModal.vue";
@@ -212,6 +212,7 @@ export default defineComponent({
         });
         if (!hasError(resp) && resp.data.id) {
           order = resp.data;
+          i18n.global.locale = order.localeString || "en";
           const productIds: any = new Set();
           order.shipGroup = order.shipGroup.filter((group: any) => {
             if(group.facilityId === 'PICKUP_REJECTED') {
