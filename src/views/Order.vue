@@ -194,7 +194,7 @@ import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
 import { mapGetters, useStore } from 'vuex'
 import { OrderService } from "@/services/OrderService";
-import { translate } from "@/i18n";
+import i18n, { translate } from "@/i18n";
 import { hasError, showToast } from "@/utils";
 import Image from "@/components/Image.vue";
 import { ProductService } from "@/services/ProductService";
@@ -319,6 +319,7 @@ export default defineComponent({
 
         if(!hasError(resp) && resp.data.id) {
           order = resp.data;
+          i18n.global.locale = order.localeString || "en";
           const productIds: any = new Set();
           const shipGroup = order.shipGroup.find((group: any) => {
             if(group.facilityId === 'PICKUP_REJECTED' && group.shipmentMethodTypeId === "STOREPICKUP") {
