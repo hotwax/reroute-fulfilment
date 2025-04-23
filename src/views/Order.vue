@@ -97,7 +97,7 @@
                     </p>
                   </ion-label>
 
-                  <template v-if="hasMultipleItems() && !areAllItemsOutOfStock()">
+                  <template v-if="hasMultipleItems() && !areAllItemsOutOfStock">
                     <ion-chip color="danger" outline v-if="item.isItemCancelled" slot="end">
                       <ion-icon :icon="medkitOutline" />
                       <ion-icon :icon="closeCircleOutline" @click="item.isItemCancelled = false" />
@@ -153,7 +153,7 @@
 
             <div class="actions">
               <ion-button :disabled="!isOrderItemsEligibleForUpdation(order.shipGroup)" @click="confirmSave(order.shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
-              <ion-button v-if="selectedSegment === 'together' || areAllItemsOutOfStock()" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
+              <ion-button v-if="selectedSegment === 'together' || areAllItemsOutOfStock" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
             </div>
           </ion-card>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
@@ -252,7 +252,8 @@ export default defineComponent({
       selectedFacility: {} as any,
       selectedItemsByFacility: {} as any,
       isOrderUpdated: false,
-      outOfStockItems: [] as any
+      outOfStockItems: [] as any,
+      areAllItemsOutOfStock: true
     }
   },
   computed: {
@@ -467,12 +468,10 @@ export default defineComponent({
         if(!isInventoryAvailable) {
           item.isOutOfStock = true;
           this.outOfStockItems.push(item);
+        } else {
+          this.areAllItemsOutOfStock = false
         }
       })
-    },
-
-    areAllItemsOutOfStock() {
-      return !this.order.shipGroup.items.some((item: any) => !item.isOutOfStock)
     },
 
     async updatePickupLocation(isPickupForAll: boolean, selectedFacilityId: any, item?: any) {
