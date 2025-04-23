@@ -27,7 +27,7 @@
               </ion-select>
             </ion-item>
 
-            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && isSplitEnabled">
+            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && isSplitEnabled && hasMultipleItems()">
               <ion-segment v-if="nearbyStores.length" @ionChange="segmentChanged($event, order.shipGroup)" v-model="selectedSegment">
                 <ion-segment-button value="together">
                   <ion-label>{{ translate("Together") }}</ion-label>
@@ -97,13 +97,15 @@
                     </p>
                   </ion-label>
 
-                  <ion-chip color="danger" outline v-if="item.isItemCancelled" slot="end">
-                    <ion-icon :icon="medkitOutline" />
-                    <ion-icon :icon="closeCircleOutline" @click="item.isItemCancelled = false" />
-                  </ion-chip>
-                  <ion-button color="danger" fill="clear" slot="end" v-else @click="item.isItemCancelled = true">
-                    <ion-icon :icon="medkitOutline" slot="icon-only" />
-                  </ion-button>
+                  <template v-if="hasMultipleItems() && !areAllItemsOutOfStock()">
+                    <ion-chip color="danger" outline v-if="item.isItemCancelled" slot="end">
+                      <ion-icon :icon="medkitOutline" />
+                      <ion-icon :icon="closeCircleOutline" @click="item.isItemCancelled = false" />
+                    </ion-chip>
+                    <ion-button color="danger" fill="clear" slot="end" v-else @click="item.isItemCancelled = true">
+                      <ion-icon :icon="medkitOutline" slot="icon-only" />
+                    </ion-button>
+                  </template>
                 </ion-item>
               </div>
             </div>
@@ -147,11 +149,11 @@
               </ion-label>
             </ion-item>
 
-            <ion-button v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedSegment === 'together'" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE)" @click="updatePickupLocation(true, selectedFacility.facilityId)" expand="block" fill="outline" class="ion-margin">{{ selectedFacility.facilityId ? translate("Change pickup location") : translate("Select pickup location")}}</ion-button>
+            <ion-button v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && selectedSegment === 'together' && nearbyStores?.length" :disabled="!hasPermission(Actions.APP_SHPGRP_PCKUP_UPDATE)" @click="updatePickupLocation(true, selectedFacility.facilityId)" expand="block" fill="outline" class="ion-margin">{{ selectedFacility.facilityId ? translate("Change pickup location") : translate("Select pickup location")}}</ion-button>
 
             <div class="actions">
               <ion-button :disabled="!isOrderItemsEligibleForUpdation(order.shipGroup)" @click="confirmSave(order.shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
-              <ion-button @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
+              <ion-button v-if="selectedSegment === 'together' || areAllItemsOutOfStock()" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
             </div>
           </ion-card>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
@@ -283,10 +285,10 @@ export default defineComponent({
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
         await this.getPickupStores();
         this.fetchOrderFacilityChangeHistory()
-        if(!this.nearbyStores.length) {
+        if(!this.nearbyStores.length && this.hasMultipleItems()) {
           this.selectedSegment = "separate";
-          this.checkForOutOfStockItems(this.order.shipGroup)
         } 
+        this.checkForOutOfStockItems(this.order.shipGroup)
       }
     }
   },
@@ -303,6 +305,9 @@ export default defineComponent({
         this.loader.dismiss();
         this.loader = null;
       }
+    },
+    hasMultipleItems() {
+      return this.order.shipGroup?.items?.length > 1
     },
     async getOrder() {
       await this.presentLoader()
@@ -464,6 +469,10 @@ export default defineComponent({
           this.outOfStockItems.push(item);
         }
       })
+    },
+
+    areAllItemsOutOfStock() {
+      return !this.order.shipGroup.items.some((item: any) => !item.isOutOfStock)
     },
 
     async updatePickupLocation(isPickupForAll: boolean, selectedFacilityId: any, item?: any) {
@@ -675,7 +684,7 @@ export default defineComponent({
       if(this.selectedSegment === "together") {
         return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? this.selectedFacility.facilityId : this.customerAddress.address1
       } else {
-        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? !shipGroup.items.some((item: any) => !(item.selectedFacilityId || item.isItemCancelled)) : this.customerAddress.address1
+        return shipGroup.selectedShipmentMethodTypeId === "STOREPICKUP" ? !shipGroup.items.some((item: any) => !item.selectedFacilityId && !item.isItemCancelled) : this.customerAddress.address1
       }
     },
 
