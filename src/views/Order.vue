@@ -27,7 +27,7 @@
               </ion-select>
             </ion-item>
 
-            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && isSplitEnabled && hasMultipleItems()">
+            <template v-if="order.shipGroup.selectedShipmentMethodTypeId === 'STOREPICKUP' && isSplitEnabled && hasMultipleItems">
               <ion-segment v-if="nearbyStores.length" @ionChange="segmentChanged($event, order.shipGroup)" v-model="selectedSegment">
                 <ion-segment-button value="together">
                   <ion-label>{{ translate("Together") }}</ion-label>
@@ -97,7 +97,7 @@
                     </p>
                   </ion-label>
 
-                  <template v-if="hasMultipleItems() && !areAllItemsOutOfStock">
+                  <template v-if="hasMultipleItems && !areAllItemsOutOfStock">
                     <ion-chip color="danger" outline v-if="item.isItemCancelled" slot="end">
                       <ion-icon :icon="medkitOutline" />
                       <ion-icon :icon="closeCircleOutline" @click="item.isItemCancelled = false" />
@@ -253,7 +253,8 @@ export default defineComponent({
       selectedItemsByFacility: {} as any,
       isOrderUpdated: false,
       outOfStockItems: [] as any,
-      areAllItemsOutOfStock: true
+      areAllItemsOutOfStock: true,
+      hasMultipleItems: false
     }
   },
   computed: {
@@ -286,7 +287,8 @@ export default defineComponent({
         this.customerAddress = this.order.shipGroup.shipTo?.postalAddress ? this.order.shipGroup.shipTo.postalAddress : {}
         await this.getPickupStores();
         this.fetchOrderFacilityChangeHistory()
-        if(!this.nearbyStores.length && this.hasMultipleItems()) {
+        this.hasMultipleItems = this.order.shipGroup.items?.length > 1
+        if(!this.nearbyStores.length && this.hasMultipleItems) {
           this.selectedSegment = "separate";
         } 
         this.checkForOutOfStockItems(this.order.shipGroup)
@@ -306,9 +308,6 @@ export default defineComponent({
         this.loader.dismiss();
         this.loader = null;
       }
-    },
-    hasMultipleItems() {
-      return this.order.shipGroup?.items?.length > 1
     },
     async getOrder() {
       await this.presentLoader()
