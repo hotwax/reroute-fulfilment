@@ -440,6 +440,7 @@ export default defineComponent({
         this.selectedItemsByFacility = {}
         this.order.shipGroup.items.map((item: any) => {
           item.selectedFacilityId = ""
+          item.isItemCancelled = false
         })
       }
     },
