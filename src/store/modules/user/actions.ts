@@ -131,7 +131,7 @@ const actions: ActionTree<UserState, RootState> = {
         const isCancellationAllowed = resp.data.docs.find((permission: any) => permission.settingTypeEnumId === 'CUST_ALLOW_CNCL')?.settingValue
         const appPermissions = prepareAppPermissions(permissions);
         setPermissions(appPermissions);
-        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? deliveryMethod : "STANDARD");
+        commit(types.USER_DELIVERY_METHOD_UPDATED, deliveryMethod ? JSON.parse(deliveryMethod)?.shipmentMethodTypeId : "STANDARD");
         commit(types.USER_PERMISSIONS_UPDATED, appPermissions);
         commit(types.USER_ORDER_SPLIT_CONFIG_UPDATED, isSplitEnabled === "true");
         commit(types.USER_ITEM_CANCELLATION_CONFIG_UPDATED, isCancellationAllowed === "true");
