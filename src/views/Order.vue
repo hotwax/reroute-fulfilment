@@ -153,7 +153,7 @@
 
             <div class="actions">
               <ion-button :disabled="!isOrderItemsEligibleForUpdation(order.shipGroup)" @click="confirmSave(order.shipGroup)" fill="clear">{{ translate("Save changes") }}</ion-button>
-              <ion-button v-if="selectedSegment === 'together' || areAllItemsOutOfStock" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request cancel") }}</ion-button>
+              <ion-button v-if="selectedSegment === 'together' || areAllItemsOutOfStock" @click="cancelOrder(order.shipGroup)" fill="clear" color="danger">{{ translate(isCancellationAllowed ? "Cancel" : "Request Cancellation") }}</ion-button>
             </div>
           </ion-card>
           <div v-else-if="isOrderUpdated" class="ion-text-center ion-padding-top">
